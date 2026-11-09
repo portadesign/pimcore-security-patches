@@ -168,7 +168,7 @@ final class TwigSandboxMutatorTest extends \PHPUnit\Framework\TestCase
         } catch (\Twig\Sandbox\SecurityNotAllowedMethodError) {
         }
 
-        $this->assertNotSame('changed', $definition->getDescription());
+        $this->assertSame('', $definition->getDescription());
     }
 
     /**

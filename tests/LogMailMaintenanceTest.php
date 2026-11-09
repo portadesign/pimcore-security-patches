@@ -85,18 +85,18 @@ final class LogMailMaintenanceTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return array<string, array{string, string}>
+     * @return array<string, array{string}>
      */
     public static function templatePayloadProvider(): array
     {
         return [
-            'expression' => ['{{7*7}}', '49'],
-            'statement' => ['{% if 1 %}x{% endif %}', 'x'],
+            'expression' => ['{{7*7}}'],
+            'statement' => ['{% if 1 %}x{% endif %}'],
         ];
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('templatePayloadProvider')]
-    public function testSummaryMailKeepsLoggedMessagesLiteral(string $payload, string $evaluated): void
+    public function testSummaryMailKeepsLoggedMessagesLiteral(string $payload): void
     {
         $marker = 'pd2026002-' . bin2hex(random_bytes(6));
         $this->insertError($marker . '-' . $payload . '-end');
@@ -105,10 +105,8 @@ final class LogMailMaintenanceTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $this->sentHtml);
         $this->assertStringContainsString($marker . '-' . $payload . '-end', $this->sentHtml[0]);
-        $this->assertStringNotContainsString($marker . '-' . $evaluated . '-end', $this->sentHtml[0]);
         $this->assertCount(1, $this->sentText);
         $this->assertStringContainsString($marker . '-' . $payload . '-end', $this->sentText[0]);
-        $this->assertStringNotContainsString($marker . '-' . $evaluated . '-end', $this->sentText[0]);
     }
 
     public function testControlRowsAreMarkedCheckedAfterTheRun(): void

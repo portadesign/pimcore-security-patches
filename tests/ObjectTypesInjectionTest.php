@@ -8,6 +8,7 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 final class ObjectTypesInjectionTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\P3SandboxRendering;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\P3MessengerQueueBaseline;
 
     private const PARENT_KEY = 'pd-sec-p3-objecttypes';
 
@@ -15,6 +16,7 @@ final class ObjectTypesInjectionTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp(): void
     {
+        $this->recordMessengerQueueBaseline();
         $this->deleteFixture();
         $parent = $this->createFolder(self::PARENT_KEY, 1);
         foreach (['child-a', 'child-b', 'empty'] as $key) {
@@ -26,6 +28,7 @@ final class ObjectTypesInjectionTest extends \PHPUnit\Framework\TestCase
     {
         $this->disableSandbox();
         $this->deleteFixture();
+        $this->purgeMessengerQueueSinceBaseline();
     }
 
     public function testChildrenListingIgnoresInjectedObjectTypes(): void
