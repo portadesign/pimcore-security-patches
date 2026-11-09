@@ -85,18 +85,27 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], @\Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
     }
 
-    public function testControlDeleteLogRoundTripsLegitimateEntry(): void
+    public function testControlDeleteLoggedAssetIsRestoredWithSameIdByMoveOverItsPath(): void
     {
         $this->prepareFolder();
-        $asset = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'logged.txt', 'data' => 'pd-sec-logged']);
-        $entry = ['id' => $asset->getId(), 'timestamp' => time(), 'data' => serialize($asset)];
+        $source = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'source.txt', 'data' => 'pd-sec-source']);
+        $ghost = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'ghost.txt', 'data' => 'pd-sec-ghost']);
+        $this->authenticate($this->createAdmin());
 
-        \Pimcore\Model\Asset\WebDAV\Service::saveDeleteLog(['/' . self::FOLDER . '/logged.txt' => $entry]);
-        $log = \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog();
+        $this->assertSame(204, $this->webDavRequest('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $this->assertArrayHasKey('/' . self::FOLDER . '/ghost.txt', \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
+        $this->assertNull(\Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]));
 
-        $this->assertSame(['/' . self::FOLDER . '/logged.txt'], array_keys($log));
-        $this->assertSame($asset->getId(), $log['/' . self::FOLDER . '/logged.txt']['id']);
-        $this->assertSame(serialize($asset), $log['/' . self::FOLDER . '/logged.txt']['data']);
+        $status = $this->webDavRequest('MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt');
+
+        $this->assertContains($status, [201, 204]);
+        $restored = \Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $restored);
+        $this->assertSame(
+            ['/' . self::FOLDER . '/ghost.txt', 'pd-sec-source'],
+            [$restored->getRealFullPath(), $restored->getData()],
+        );
+        $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
     }
 
     public function testTableColumnDataRejectsTopLevelForeignClass(): void
@@ -542,15 +551,32 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Element\Service::getElementFromSession('asset', $asset->getId(), '_other'));
     }
 
-    public function testControlSessionElementRoundTripsWhenSavedThroughService(): void
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function sessionElementTypeProvider(): array
     {
-        $asset = $this->sessionAsset('sessionaaa.txt');
+        return [
+            'object' => ['object'],
+            'document' => ['document'],
+            'asset' => ['asset'],
+        ];
+    }
 
-        \Pimcore\Model\Element\Service::saveElementToSession($asset);
-        $loaded = \Pimcore\Model\Element\Service::getElementFromSession('asset', $asset->getId());
+    #[\PHPUnit\Framework\Attributes\DataProvider('sessionElementTypeProvider')]
+    public function testControlSessionElementRoundTripsWhenSavedThroughService(string $type): void
+    {
+        $this->pushSession();
+        $element = $this->createElement($type);
 
-        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $loaded);
-        $this->assertSame([$asset->getId(), 'sessionaaa.txt'], [$loaded->getId(), $loaded->getFilename()]);
+        \Pimcore\Model\Element\Service::saveElementToSession($element);
+        $this->cleanups[] = static function () use ($type, $element): void {
+            \Pimcore\Model\Element\Service::removeElementFromSession($type, $element->getId());
+        };
+        $loaded = \Pimcore\Model\Element\Service::getElementFromSession($type, $element->getId());
+
+        $this->assertInstanceOf($element::class, $loaded);
+        $this->assertSame([$element->getId(), $element->getKey()], [$loaded->getId(), $loaded->getKey()]);
     }
 
     public function testErrorLogDetailDoesNotInstantiateForeignClassInParameters(): void
@@ -765,7 +791,7 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         return $id;
     }
 
-    private function sessionAsset(string $filename): \Pimcore\Model\Asset
+    private function pushSession(): void
     {
         $request = new \Symfony\Component\HttpFoundation\Request();
         $request->setSession(new \Symfony\Component\HttpFoundation\Session\Session(new \Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage()));
@@ -774,7 +800,36 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->cleanups[] = static function () use ($stack): void {
             $stack->pop();
         };
+    }
 
+    private function createElement(string $type): \Pimcore\Model\Element\ElementInterface
+    {
+        if ('document' === $type) {
+            return \Pimcore\Model\Document::getById($this->createPage(), ['force' => true]);
+        }
+
+        if ('object' === $type) {
+            $object = new \Pimcore\Model\DataObject\AccessoryPart();
+            $object->setParentId(1);
+            $object->setKey('pd-sec-remaining-' . bin2hex(random_bytes(4)));
+            $object->setPublished(false);
+            $object->save();
+            $id = $object->getId();
+            $this->cleanups[] = static function () use ($id): void {
+                \Pimcore\Model\DataObject::getById($id, ['force' => true])?->delete();
+            };
+
+            return $object;
+        }
+
+        $this->prepareFolder();
+
+        return \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'sessionaaa.txt', 'data' => 'pd-sec-session']);
+    }
+
+    private function sessionAsset(string $filename): \Pimcore\Model\Asset
+    {
+        $this->pushSession();
         $this->prepareFolder();
         $asset = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => $filename, 'data' => 'pd-sec-session']);
         $this->cleanups[] = function () use ($asset): void {
@@ -808,6 +863,26 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
     private function markerItem(): \Pimcore\Model\Element\Data\MarkerHotspotItem
     {
         return new \Pimcore\Model\Element\Data\MarkerHotspotItem(['name' => 'label', 'type' => 'input', 'value' => 'v']);
+    }
+
+    private function webDavRequest(string $method, string $path, ?string $destinationPath = null): int
+    {
+        $baseUri = '/asset/webdav/';
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+        $server = new \Sabre\DAV\Server($tree);
+        $server->setBaseUri($baseUri);
+        $headers = null === $destinationPath ? [] : ['Destination' => $baseUri . ltrim($destinationPath, '/'), 'Overwrite' => 'T'];
+        $request = new \Sabre\HTTP\Request($method, $baseUri . ltrim($path, '/'), $headers);
+        $request->setBaseUrl($baseUri);
+        $response = new \Sabre\HTTP\Response();
+
+        try {
+            $server->invokeMethod($request, $response, false);
+        } catch (\Sabre\DAV\Exception $e) {
+            return $e->getHTTPCode();
+        }
+
+        return $response->getStatus();
     }
 
     private function writeDeleteLog(string $contents): void

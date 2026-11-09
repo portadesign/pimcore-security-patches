@@ -247,12 +247,9 @@ final class FieldNameValidationTest extends \PHPUnit\Framework\TestCase
     {
         $this->db->executeStatement('CREATE TABLE `' . self::TABLE . '` (oo_id INT NOT NULL PRIMARY KEY)');
 
-        try {
-            $this->ddlDao()->addColumn(self::TABLE, $name, 'varchar(10)');
-        } catch (\Throwable) {
-        }
+        $this->ddlDao()->addColumn(self::TABLE, $name, 'varchar(10)');
 
-        $this->assertSame([], array_values(array_diff($this->columnNames(), ['oo_id', $name])));
+        $this->assertSame(['oo_id', $name], $this->columnNames());
     }
 
     public function testRemoveUnusedColumnsKeepsBreakoutInsideOneColumnName(): void
@@ -262,10 +259,7 @@ final class FieldNameValidationTest extends \PHPUnit\Framework\TestCase
             'CREATE TABLE `' . self::TABLE . '` (oo_id INT NOT NULL PRIMARY KEY, `keep` VARCHAR(5), `q` VARCHAR(5), `' . str_replace('`', '``', $hostile) . '` VARCHAR(5))'
         );
 
-        try {
-            $this->ddlDao()->dropUnused(self::TABLE, [$hostile], ['oo_id']);
-        } catch (\Throwable) {
-        }
+        $this->ddlDao()->dropUnused(self::TABLE, [$hostile], ['oo_id']);
 
         $this->assertSame(['oo_id', 'keep', 'q'], $this->columnNames());
     }
@@ -277,10 +271,7 @@ final class FieldNameValidationTest extends \PHPUnit\Framework\TestCase
         $field->setIndex(true);
         (new \ReflectionProperty(\Pimcore\Model\DataObject\ClassDefinition\Data::class, 'name'))->setValue($field, 'a` (`a`), DROP COLUMN `keep` -- ');
 
-        try {
-            $this->ddlDao()->indexField($field, self::TABLE);
-        } catch (\Throwable) {
-        }
+        $this->ddlDao()->indexField($field, self::TABLE);
 
         $this->assertSame(['oo_id', 'a', 'keep'], $this->columnNames());
     }
