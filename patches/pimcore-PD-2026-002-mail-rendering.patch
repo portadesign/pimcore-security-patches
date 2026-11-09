@@ -1,0 +1,91 @@
+ID: PD-2026-002 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: Resent logged mails, the application log summary mail and workflow notification mails built from a template are sent without template rendering; body and subject reach the recipient exactly as logged or built, and the mail log stores the subject that was sent instead of rendering it again. The log summary and notification mails carry an explicit plain-text part, the notification mail gets its CSS and absolute paths applied before sending. A resend of a log entry with a document id and no stored body is no longer re-rendered from the document.
+
+diff --git a/bundles/AdminBundle/Controller/Admin/EmailController.php b/bundles/AdminBundle/Controller/Admin/EmailController.php
+index 804d545..45c982e 100644
+--- a/bundles/AdminBundle/Controller/Admin/EmailController.php
++++ b/bundles/AdminBundle/Controller/Admin/EmailController.php
+@@ -362,7 +362,7 @@ class EmailController extends AdminAbstractController
+                 $mail->setParam($entry['key'], $data);
+             }
+ 
+-            $mail->send();
++            $mail->sendWithoutRendering();
+             $success = true;
+         }
+ 
+diff --git a/lib/Helper/Mail.php b/lib/Helper/Mail.php
+index 4df2102..f85353e 100644
+--- a/lib/Helper/Mail.php
++++ b/lib/Helper/Mail.php
+@@ -175,7 +175,7 @@ CSS;
+         $emailLog->setParams($mail->getParams());
+         $emailLog->setSentDate(time());
+ 
+-        $subject = $mail->getSubjectRendered();
++        $subject = (string) $mail->getSubject();
+         if (0 === strpos($subject, '=?')) {
+             $mbIntEnc = mb_internal_encoding();
+             mb_internal_encoding($mail->getTextCharset());
+diff --git a/lib/Maintenance/Tasks/LogMailMaintenanceTask.php b/lib/Maintenance/Tasks/LogMailMaintenanceTask.php
+index 28e72cb..ba1c5a0 100644
+--- a/lib/Maintenance/Tasks/LogMailMaintenanceTask.php
++++ b/lib/Maintenance/Tasks/LogMailMaintenanceTask.php
+@@ -82,16 +82,17 @@ class LogMailMaintenanceTask implements TaskInterface
+ 
+                     $rowsProcessed += count($entries);
+ 
+-                    $html = var_export($entries, true);
+-                    $html = "<pre>$html</pre>";
++                    $text = var_export($entries, true);
++                    $html = "<pre>$text</pre>";
+                     $mail = new \Pimcore\Mail();
+                     $mail->setIgnoreDebugMode(true);
+                     $mail->html($html);
++                    $mail->text($text);
+                     foreach ($receivers as $receiver) {
+                         $mail->addTo(new Address($receiver, $receiver));
+                     }
+                     $mail->subject('Error Log '.\Pimcore\Tool::getHostUrl());
+-                    $mail->send();
++                    $mail->sendWithoutRendering();
+                 }
+             }
+         }
+diff --git a/lib/Workflow/Notification/NotificationEmailService.php b/lib/Workflow/Notification/NotificationEmailService.php
+index 24912a1..56d15d7 100644
+--- a/lib/Workflow/Notification/NotificationEmailService.php
++++ b/lib/Workflow/Notification/NotificationEmailService.php
+@@ -177,9 +177,28 @@ class NotificationEmailService extends AbstractNotificationService
+             $this->translator->trans('workflow_change_email_notification_subject', [$subjectType . ' ' . $subject->getFullPath(), $workflow->getName()], 'admin', $language)
+         );
+ 
+-        $mail->html($this->getHtmlBody($subjectType, $subject, $workflow, $action, $language, $mailPath, $deeplink));
++        $html = $this->getHtmlBody($subjectType, $subject, $workflow, $action, $language, $mailPath, $deeplink);
++        $html = \Pimcore\Helper\Mail::embedAndModifyCss($html);
++        $html = \Pimcore\Helper\Mail::setAbsolutePaths($html);
+ 
+-        $mail->send();
++        $mail->html($html);
++
++        try {
++            $crawler = new \Symfony\Component\DomCrawler\Crawler($html);
++            $crawler->filter('head, style, script')->each(static function (\Symfony\Component\DomCrawler\Crawler $node): void {
++                $element = $node->getNode(0);
++                $element?->parentNode?->removeChild($element);
++            });
++            $body = $crawler->filter('body');
++
++            $converter = new \League\HTMLToMarkdown\HtmlConverter();
++            $converter->getConfig()->merge($mail->getHtml2TextOptions());
++            $mail->text($converter->convert($body->count() ? $body->html() : $html));
++        } catch (\Exception $e) {
++            \Pimcore\Logger::warning('Converting HTML to plain text failed, no plain text part will be attached to the notification email');
++        }
++
++        $mail->sendWithoutRendering();
+     }
+ 
+     /**

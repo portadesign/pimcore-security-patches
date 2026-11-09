@@ -1,0 +1,87 @@
+ID: PD-2026-005 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: The default sender of a mail without From, the links and files of mail bodies (absolute paths, embedded CSS) and the workflow notification deeplink are built from the configured general.domain; the request host is only the fallback when no domain is configured.
+
+diff --git a/lib/Helper/Mail.php b/lib/Helper/Mail.php
+index f85353e..b138610 100644
+--- a/lib/Helper/Mail.php
++++ b/lib/Helper/Mail.php
+@@ -125,6 +125,24 @@ CSS;
+         return $style;
+     }
+ 
++    /**
++     * @internal
++     *
++     * Base URL for links and files in mails: the configured general.domain, the request host only when none is set
++     *
++     * @return string
++     */
++    public static function getHostUrl()
++    {
++        $domain = \Pimcore\Config::getSystemConfiguration('general')['domain'] ?? null;
++
++        if (!$domain) {
++            return \Pimcore\Tool::getHostUrl();
++        }
++
++        return \Pimcore\Tool::getRequestScheme() . '://' . $domain;
++    }
++
+     /**
+      * @internal
+      *
+@@ -240,7 +258,7 @@ CSS;
+ 
+         // fallback
+         if (!$hostUrl) {
+-            $hostUrl = \Pimcore\Tool::getHostUrl();
++            $hostUrl = self::getHostUrl();
+         }
+ 
+         //matches all links
+@@ -362,7 +380,7 @@ CSS;
+     public static function normalizeCssContent($content, array $fileInfo)
+     {
+         preg_match_all("@url\s*\(\s*[\"']?(.*?)[\"']?\s*\)@is", $content, $matches);
+-        $hostUrl = Tool::getHostUrl();
++        $hostUrl = self::getHostUrl();
+ 
+         if (is_array($matches[0])) {
+             foreach ($matches[0] as $key => $value) {
+@@ -395,7 +413,7 @@ CSS;
+     public static function getNormalizedFileInfo($path, ?Model\Document $document = null)
+     {
+         $fileInfo = [];
+-        $hostUrl = Tool::getHostUrl();
++        $hostUrl = self::getHostUrl();
+         if ($path[0] != '/') {
+             $fileInfo['fileUrl'] = $hostUrl . $document . "/$path"; //relative eg. ../file.css
+         } else {
+diff --git a/lib/Mail.php b/lib/Mail.php
+index 01a5a78..417c51b 100644
+--- a/lib/Mail.php
++++ b/lib/Mail.php
+@@ -554,7 +554,7 @@ class Mail extends Email
+             }
+         }
+ 
+-        if (empty($this->getFrom()) && $hostname = Tool::getHostname()) {
++        if (empty($this->getFrom()) && $hostname = (\Pimcore\Config::getSystemConfiguration('general')['domain'] ?? null) ?: Tool::getHostname()) {
+             // set default "from" address
+             $this->from('no-reply@' . $hostname);
+         }
+diff --git a/lib/Workflow/Notification/NotificationEmailService.php b/lib/Workflow/Notification/NotificationEmailService.php
+index 56d15d7..e5652cf 100644
+--- a/lib/Workflow/Notification/NotificationEmailService.php
++++ b/lib/Workflow/Notification/NotificationEmailService.php
+@@ -78,7 +78,7 @@ class NotificationEmailService extends AbstractNotificationService
+             }
+ 
+             $deeplink = '';
+-            $hostUrl = Tool::getHostUrl();
++            $hostUrl = \Pimcore\Helper\Mail::getHostUrl();
+             if ($hostUrl !== '') {
+                 // Decide what kind of link to create
+                 $objectType = $type = 'object';
