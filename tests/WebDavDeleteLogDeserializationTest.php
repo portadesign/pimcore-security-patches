@@ -10,6 +10,7 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AdminUserSession;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AssetFolderFixture;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\P4WebDavSubprocess;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const USERNAME = 'pd-sec-deletelog-user';
 

@@ -9,6 +9,7 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AdminUserSession;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AssetFolderFixture;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const ADMIN_USERNAME = 'pd-sec-unserialize-remaining-admin';
 
@@ -26,7 +27,6 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         $this->resetCanary();
-        \Pimcore\Model\Version::disable();
         $logFile = \Pimcore\Model\Asset\WebDAV\Service::getDeleteLogFile();
         $this->originalDeleteLog = is_file($logFile) ? (string) file_get_contents($logFile) : null;
     }
@@ -41,7 +41,6 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->restoreDeleteLog();
         $this->deleteUserByName(self::ADMIN_USERNAME);
         $this->deleteAssetByPath('/' . self::FOLDER);
-        \Pimcore\Model\Version::enable();
         $this->resetCanary();
     }
 

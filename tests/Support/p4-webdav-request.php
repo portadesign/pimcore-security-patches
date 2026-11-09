@@ -8,6 +8,8 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 $container = \Pimcore::getContainer();
 
+\Pimcore\Model\Version::disable();
+
 if ('' !== $userId) {
     $user = \Pimcore\Model\User::getById((int) $userId);
     $resolver = $container->get(\Pimcore\Security\User\TokenStorageUserResolver::class);

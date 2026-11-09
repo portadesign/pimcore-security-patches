@@ -7,6 +7,8 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 #[\PHPUnit\Framework\Attributes\Group('CVE-2026-44741')]
 final class TranslationGridFilterTest extends \PHPUnit\Framework\TestCase
 {
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
+
     private const DOMAIN = \Pimcore\Model\Translation::DOMAIN_DEFAULT;
 
     private const KEY_PREFIX = 'pd-sec-grid-';

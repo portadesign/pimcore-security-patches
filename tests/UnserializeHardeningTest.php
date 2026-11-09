@@ -9,6 +9,7 @@ final class UnserializeHardeningTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AssetFolderFixture;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\RejectedSerializedPayloads;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const FIXTURE_FOLDER = 'pd-sec-unserialize';
 
@@ -25,7 +26,6 @@ final class UnserializeHardeningTest extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         $this->resetCanary();
-        \Pimcore\Model\Version::disable();
         $this->originalSystemConfiguration = \Pimcore\Config::getSystemConfiguration() ?? [];
     }
 
@@ -38,7 +38,6 @@ final class UnserializeHardeningTest extends \PHPUnit\Framework\TestCase
         $this->cleanups = [];
         \Pimcore\Config::setSystemConfiguration($this->originalSystemConfiguration);
         $this->deleteAssetByPath('/' . self::FIXTURE_FOLDER);
-        \Pimcore\Model\Version::enable();
         $this->resetCanary();
     }
 

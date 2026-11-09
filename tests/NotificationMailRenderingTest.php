@@ -7,6 +7,8 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 #[\PHPUnit\Framework\Attributes\Group('PD-2026-002')]
 final class NotificationMailRenderingTest extends \PHPUnit\Framework\TestCase
 {
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
+
     private const RECIPIENT = 'pd-sec-notification-user';
 
     private const ELEMENT_ID = 990017;

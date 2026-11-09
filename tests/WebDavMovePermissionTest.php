@@ -10,6 +10,7 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AdminUserSession;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AssetFolderFixture;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\P4WebDavSubprocess;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const USERNAME = 'pd-sec-webdav-user';
 
@@ -402,9 +403,9 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(204, $result['status'], $result['body']);
         $this->assertNull(\Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true]));
-        $moved = \Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/source.txt');
-        $this->assertSame($this->source->getId(), $moved?->getId());
-        $this->assertSame(self::SOURCE_DATA, $moved?->getData());
+        $moved = \Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]);
+        $this->assertSame('/' . self::FOLDER . '/sub/source.txt', $moved?->getRealFullPath());
+        $this->assertSame(self::SOURCE_DATA, $moved->getData());
     }
 
     /**

@@ -8,6 +8,7 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 final class HttpErrorLogTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AdminUserSession;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const URI_PREFIX = 'http://pd-sec-23493.example/missing-';
 

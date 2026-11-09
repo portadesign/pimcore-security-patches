@@ -9,6 +9,7 @@ final class ExportPathDisclosureTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\AdminUserSession;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\P4ReportScratchTable;
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\HostResidueGuard;
 
     private const ADMIN_USERNAME = 'pd-sec-pathdisclosure-admin';
 
