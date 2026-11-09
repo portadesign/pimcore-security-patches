@@ -73,7 +73,7 @@ index 01a5a78..417c51b 100644
              $this->from('no-reply@' . $hostname);
          }
 diff --git a/lib/Workflow/Notification/NotificationEmailService.php b/lib/Workflow/Notification/NotificationEmailService.php
-index 9faca8a..11b5ddb 100644
+index 56d15d7..e5652cf 100644
 --- a/lib/Workflow/Notification/NotificationEmailService.php
 +++ b/lib/Workflow/Notification/NotificationEmailService.php
 @@ -78,7 +78,7 @@ class NotificationEmailService extends AbstractNotificationService

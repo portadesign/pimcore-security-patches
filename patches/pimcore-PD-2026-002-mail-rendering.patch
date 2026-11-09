@@ -55,10 +55,10 @@ index 28e72cb..ba1c5a0 100644
              }
          }
 diff --git a/lib/Workflow/Notification/NotificationEmailService.php b/lib/Workflow/Notification/NotificationEmailService.php
-index 24912a1..9faca8a 100644
+index 24912a1..56d15d7 100644
 --- a/lib/Workflow/Notification/NotificationEmailService.php
 +++ b/lib/Workflow/Notification/NotificationEmailService.php
-@@ -177,9 +177,21 @@ class NotificationEmailService extends AbstractNotificationService
+@@ -177,9 +177,28 @@ class NotificationEmailService extends AbstractNotificationService
              $this->translator->trans('workflow_change_email_notification_subject', [$subjectType . ' ' . $subject->getFullPath(), $workflow->getName()], 'admin', $language)
          );
  
@@ -71,9 +71,16 @@ index 24912a1..9faca8a 100644
 +        $mail->html($html);
 +
 +        try {
++            $crawler = new \Symfony\Component\DomCrawler\Crawler($html);
++            $crawler->filter('head, style, script')->each(static function (\Symfony\Component\DomCrawler\Crawler $node): void {
++                $element = $node->getNode(0);
++                $element?->parentNode?->removeChild($element);
++            });
++            $body = $crawler->filter('body');
++
 +            $converter = new \League\HTMLToMarkdown\HtmlConverter();
 +            $converter->getConfig()->merge($mail->getHtml2TextOptions());
-+            $mail->text($converter->convert($html));
++            $mail->text($converter->convert($body->count() ? $body->html() : $html));
 +        } catch (\Exception $e) {
 +            \Pimcore\Logger::warning('Converting HTML to plain text failed, no plain text part will be attached to the notification email');
 +        }
