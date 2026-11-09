@@ -1,0 +1,21 @@
+ID: PD-2026-003 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: Select-type (Select, Country, Language, User, Gender) grid filters quote the filter value and escape LIKE wildcards instead of wrapping it in raw double quotes.
+
+diff --git a/models/DataObject/ClassDefinition/Data/Select.php b/models/DataObject/ClassDefinition/Data/Select.php
+--- a/models/DataObject/ClassDefinition/Data/Select.php
++++ b/models/DataObject/ClassDefinition/Data/Select.php
+@@ -547,10 +547,10 @@
+         }
+ 
+         if ($operator === '=') {
+-            return $key.' = '."\"$value\"".' ';
++            return $key.' = '.$db->quote((string)$value).' ';
+         }
+         if ($operator === 'LIKE') {
+-            return $key.' LIKE '."\"%$value%\"".' ';
++            return $key.' LIKE '.$db->quote('%' . \Pimcore\Db\Helper::escapeLike((string)$value) . '%').' ';
+         }
+ 
+         return null;
