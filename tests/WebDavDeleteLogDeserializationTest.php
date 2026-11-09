@@ -103,7 +103,7 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
         $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
     }
 
-    public function testDeleteLoggedAssetOfOverriddenClassIsRestored(): void
+    public function testControlDeleteLoggedAssetOfOverriddenClassIsRestored(): void
     {
         $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
         $ghost = \Pimcore\Model\Asset::create($this->folder->getId(), ['filename' => 'ghost.txt', 'data' => self::GHOST_DATA]);
