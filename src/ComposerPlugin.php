@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches;
 
-final readonly class ComposerPlugin implements \Composer\Plugin\PluginInterface, \Composer\EventDispatcher\EventSubscriberInterface
+final class ComposerPlugin implements \Composer\Plugin\PluginInterface, \Composer\EventDispatcher\EventSubscriberInterface
 {
     public function activate(\Composer\Composer $composer, \Composer\IO\IOInterface $io): void
     {

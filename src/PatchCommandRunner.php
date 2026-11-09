@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches;
 
-final readonly class PatchCommandRunner
+final class PatchCommandRunner
 {
     public const GUARD_ENV = 'PORTADESIGN_PATCHES_SYNC';
 
@@ -22,10 +22,10 @@ final readonly class PatchCommandRunner
      * @param list<string> $parentArguments
      */
     public function __construct(
-        private ProcessRunner $runner,
-        private string $phpBinary,
-        private string $composerBinary,
-        private array $parentArguments,
+        private readonly ProcessRunner $runner,
+        private readonly string $phpBinary,
+        private readonly string $composerBinary,
+        private readonly array $parentArguments,
     ) {
     }
 

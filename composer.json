@@ -1,6 +1,6 @@
 {
     "name": "portadesign/pimcore-security-patches",
-    "description": "Security hardening of pimcore/pimcore 11.5.x and pimcore/admin-ui-classic-bundle 1.7.x against published CVEs, applied automatically on composer require, install and update",
+    "description": "Security hardening of pimcore/pimcore 10.6.x against published CVEs, applied automatically on composer require, install and update",
     "type": "composer-plugin",
     "license": "GPL-3.0-or-later",
     "authors": [
@@ -11,18 +11,17 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.1",
         "composer-plugin-api": "^2.0",
         "cweagans/composer-patches": "^2.0"
     },
     "require-dev": {
         "composer/composer": "^2.0",
         "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^11.0 || ^12.0"
+        "phpunit/phpunit": "^10.5"
     },
     "conflict": {
-        "pimcore/pimcore": "<11.5.4 || >=12.0",
-        "pimcore/admin-ui-classic-bundle": "<1.7.6 || >=2.0"
+        "pimcore/pimcore": "<10.6.9 || >=10.7"
     },
     "autoload": {
         "psr-4": {
@@ -48,95 +47,7 @@
     "extra": {
         "class": "Portadesign\\PimcoreSecurityPatches\\ComposerPlugin",
         "patches": {
-            "pimcore/pimcore": [
-                {
-                    "description": "CVE-2026-27461: SQL injection in Dependency Dao RLIKE filter",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-27461-dependency-rlike.patch",
-                    "sha256": "0e4c5bbbcb055a53836379d567e35f0ec482be668d21afe0eff06fcadb3a089b"
-                },
-                {
-                    "description": "CVE-2026-55634: RCE via class definition field name",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-55634-class-field-name-rce.patch",
-                    "sha256": "d4519332105298f927fa07f132aebe72f11ceea76baf65a5938062f9a2e27f8f"
-                },
-                {
-                    "description": "CVE-2026-11407: Twig sandbox bypass and reachable model getters",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-                    "sha256": "3fb1bf6d9c6d93175a6f4b5313d249ce572e675ff028e8a4a4ac8aa3ced94a7d"
-                },
-                {
-                    "description": "CVE-2026-5394: SQL injection in composite indexes",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-5394-composite-index-sqli.patch",
-                    "sha256": "4a46d2e89b3d7e0c571c64a0a3f0be0530b79fa84cd4737ba5da5e60df2b4a43"
-                },
-                {
-                    "description": "CVE-2026-44739: SQL injection in Custom Reports column configuration",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-44739-custom-reports-sql.patch",
-                    "sha256": "87257ef11c5f33f97e1c99e335a6621f0ec3f5135ca0f45c86f57471278af6df"
-                },
-                {
-                    "description": "CVE-2026-55416: SQL injection in Custom Reports SQL fragments",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-55416-custom-reports-sql-fragments.patch",
-                    "sha256": "73f6716413baa2c06e1344bf5a63068dd2fe2154d9b285dc8e5954f7adc4853c"
-                },
-                {
-                    "description": "CVE-2026-55220, CVE-2026-45162: restrict unserialize allowed classes",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-55220-unserialize-hardening.patch",
-                    "sha256": "08f455259dc02d9c32390d124943cb8f40ee945f8dfc30209746dd0941ef6373"
-                },
-                {
-                    "description": "PD-2026-001 (no CVE): restrict admin session token deserialization",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-PD-2026-001-admin-session-token.patch",
-                    "sha256": "653fc9d42974171f691edc0750789fcff42473db6bab97e2e1d2bc2078a89699"
-                },
-                {
-                    "description": "CVE-2026-55072: anchor class definition ID regex",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-55072-class-definition-id-regex.patch",
-                    "sha256": "9448e68fd061894c51c26675226f57f7b7349ab589b3edc18437d97341e738d6"
-                },
-                {
-                    "description": "CVE-2026-45260: WebDAV MOVE missing authorization",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
-                    "sha256": "141ff151221c5a6d194c266ebdcabf3d259ee7339bfbcc3ec0c9021053cfddf7"
-                },
-                {
-                    "description": "CVE-2026-45703: WordExport authorization bypass, view permission on exported elements",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45703-wordexport-view-permission.patch",
-                    "sha256": "8de108e979aab1b4ebb586478e7a894dda90cf73491171db3925d9706b7a1b57"
-                },
-                {
-                    "description": "CVE-2026-45162: unserialize without allowed_classes in the WebDAV delete log, Table, Block, editables and other model readers; HMAC-signed session elements",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45162-unserialize-remaining.patch",
-                    "sha256": "ebc9727a0698008f72da4937a07d4e4096caeea96f91b7158393688bb59407aa"
-                },
-                {
-                    "description": "CVE-2026-45704: CustomReports sharing rules enforced on the detail, data and export endpoints",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45704-custom-reports-share.patch",
-                    "sha256": "7e41c7906cd037cbea53d89693f5b1587c61846fd11cd0b8402705cc1157461e"
-                },
-                {
-                    "description": "PD-2026-002 (no CVE): send the application log summary mail without template rendering, log the sent subject",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-PD-2026-002-mail-rendering.patch",
-                    "sha256": "36d9b062599f800df742074fa1880341c2232b8831f83a09c943b8a6196eb1c0"
-                }
-            ],
-            "pimcore/admin-ui-classic-bundle": [
-                {
-                    "description": "CVE-2026-44741: SQL injection in translation grid filters",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-CVE-2026-44741-translation-grid.patch",
-                    "sha256": "1f14117bd7a600582e38232872881302f09df15698251426505c02925e05e43f"
-                },
-                {
-                    "description": "CVE-2026-45162: unserialize without allowed_classes in the dashboard config reader",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-CVE-2026-45162-dashboard.patch",
-                    "sha256": "2230398e1bfb13acf53a2dc49da1cc95305d4cc6b483b9a0acdf6d5631b67057"
-                },
-                {
-                    "description": "PD-2026-002 (no CVE): send mails built from finished or stored content without template rendering",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-PD-2026-002-mail-rendering.patch",
-                    "sha256": "069cd2137e8028051389e3bbc1be884f00fcab182f43604e745457fba9784481"
-                }
-            ]
+            "pimcore/pimcore": []
         }
     }
 }

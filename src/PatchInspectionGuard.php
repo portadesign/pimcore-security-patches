@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches;
 
-final readonly class PatchInspectionGuard
+final class PatchInspectionGuard
 {
     /**
      * @param array{checked: int, missing: array<string, int>} $inspection

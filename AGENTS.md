@@ -4,55 +4,56 @@ Read this first. It explains why the package exists, how it works, which decisio
 
 ## Purpose
 
-Pimcore 11 reached end of life with 11.5.14.1 (admin-ui-classic-bundle 1.7.16) while CVEs against it kept being published. Portadesign runs several Pimcore 11 projects (suys-pim11, stock, more) on the same base image (`portadev/pimcore-php`, Alpine, ships `git` and `patch`). This package carries Portadesign's own fixes for those CVEs, written from the public advisories and this package's regression tests, and applies them from Composer, so each project needs only `composer require` and gets the same patch set, verification and scanner silencing.
+This is the Pimcore 10.6 line. Pimcore 10 is end of life: 10.6.9 is the last release (PHP 8.1) while CVEs against it keep being published, and the admin UI lives inside `pimcore/pimcore` (`bundles/AdminBundle`), not in `pimcore/admin-ui-classic-bundle`. Portadesign runs Pimcore 10 projects on the same base image as the 11 ones (`portadev/pimcore-php`, Alpine, ships `git` and `patch`). This package carries Portadesign's own fixes for those CVEs, written from the public advisories and this package's regression tests, and applies them from Composer, so each project needs only `composer require` and gets the same patch set, verification and scanner silencing.
+
+The branch starts as an empty skeleton: `extra.patches`, `advisories.json`, `patches/` and the exploit tests are filled package by package, each ported or written against 10.6.9 (the 11.5 branch is the pattern: `git show 11.5:<path>`).
 
 Public GitHub repository, not on Packagist. Installation is documented in `README.md` and must stay at a handful of copy-paste commands.
 
 ## Lines, branches, name
 
 - Package `portadesign/pimcore-security-patches` (namespace `Portadesign\PimcoreSecurityPatches`). It replaces `portadesign/pimcore-11-security-patches`, whose tags v1.0.0–v1.0.3 stay untouched. The GitHub repository is still `portadesign/pimcore-11-security-patches`; patch URLs and the VEX `@id` use that path until the owner renames it.
-- Versioned like Pimcore: one branch and one tag series per Pimcore line. Branch `11.5` (Pimcore 11.5.x, admin-ui-classic-bundle 1.7.x) releases `v11.5.<n>`; branch `10.6` (Pimcore 10.6.x, PHP 8.1) releases `v10.6.<n>`. A project requires `^11.5` or `^10.6`. `conflict` in each branch's `composer.json` pins its line. The 10.6 line exists; its patch list follows and is documented on that branch.
+- Versioned like Pimcore: one branch and one tag series per Pimcore line. Branch `11.5` (Pimcore 11.5.x, admin-ui-classic-bundle 1.7.x) releases `v11.5.<n>`; branch `10.6` (Pimcore 10.6.x, PHP 8.1) releases `v10.6.<n>`. A project requires `^11.5` or `^10.6`. `conflict` in each branch's `composer.json` pins its line; on this branch `pimcore/pimcore: <10.6.9 || >=10.7` and no admin-ui conflict.
 - `main` follows the newest line by fast-forward. A fix that applies to several lines is made per branch, not merged across: patches, tests and manifests differ per line.
-- The `.github/workflows/verify.yml` matrix is per branch (the versions of that line). Scheduled workflows run only on the default branch, so the weekly run covers the line `main` points to.
+- The `.github/workflows/verify.yml` matrix is per branch (here `pimcore: [v10.6.9]`). Scheduled workflows run only on the default branch, so the weekly run covers the line `main` points to.
 
 ## Provenance
 
-Every patch is an independent implementation. The inputs were the public advisory text (GHSA/NVD), the GPLv3 Pimcore 11.5.4 and 11.5.14.1 sources and the exploit tests in `tests/`. No other implementation of a fix, no newer Pimcore release and no third-party fork was consulted. Keep it that way: a new patch starts from the advisory and a failing test, never from somebody else's diff. Do not add references to other implementations to patch headers, README, CHANGELOG or VEX.
+Every patch is an independent implementation. The inputs were the public advisory text (GHSA/NVD), the GPLv3 Pimcore 10.6.9 source (and, to understand what this repository's own 11.5 patches target, the 11.5.4 and 11.5.14.1 sources) and the exploit tests in `tests/`. No other implementation of a fix, no newer Pimcore release and no third-party fork was consulted. Keep it that way: a new patch starts from the advisory and a failing test, never from somebody else's diff. Do not add references to other implementations to patch headers, README, CHANGELOG or VEX.
 
 ## How it works
 
-- `composer.json` is a `composer-plugin` that requires `cweagans/composer-patches` 2.x. Patches live in `patches/` and are referenced in `extra.patches` by raw GitHub URL pinned to the release tag plus `sha256`. cweagans reads dependency patches only from `composer.lock`, so the URLs must be absolute; relative vendor paths do not work.
+- `composer.json` is a `composer-plugin` that requires `cweagans/composer-patches` 2.x and PHP `^8.1`; Pimcore 10 projects often run 1.x, see the migration steps in `README.md`. Patches live in `patches/` and are referenced in `extra.patches` by raw GitHub URL pinned to the release tag plus `sha256`. cweagans reads dependency patches only from `composer.lock`, so the URLs must be absolute; relative vendor paths do not work.
 - `src/ComposerPlugin.php` subscribes to `post-install-cmd` and `post-update-cmd`. `detectDrift()` compares `patches.lock.json` with the resolved patch set; `InstalledPatchInspector` checks that each locked patch is applied (`patch -R --dry-run`, fallback `git apply --check -R` with `GIT_CEILING_DIRECTORIES`; both missing → warning, no repatch). Drift or a missing patch triggers `patches-relock` and `patches-repatch` in a child Composer process (`PatchCommandRunner` over `ComposerProcessRunner`, in the project directory, forwarding `--ignore-platform-req[s]` as `COMPOSER_IGNORE_PLATFORM_REQ[S]`), guarded against recursion by `PORTADESIGN_PATCHES_SYNC`. Running cweagans in-process fails because Composer loads the plugin class twice. A non-zero child exit throws with the child output. After the run `PatchInspectionGuard` re-inspects every patch from the fresh lock and checks the patched package directories; it throws when a patch is still missing or when nothing could be verified (neither `patch` nor `git`), because `patches-repatch` in composer-patches 2 exits 0 even when its inner `install` fails.
 - Bundled `patches/*` with a matching `sha256` are used for verification instead of a download; download failures warn and skip.
-- `advisories.json` is the single source for advisory status. `bin/build-vex.php` generates `vex.openvex.json` (OpenVEX 0.2.0, for Trivy `--vex`) and `audit-ignore.json` (for Composer `config.audit.ignore` and `config.policy.advisories.ignore-id`). Statuses: `fixed`, `affected`, `not_affected` with precondition, `accepted` (not in the VEX, needs `.trivyignore.yaml`), `hardening` (no public advisory, internal `PD-YYYY-NNN` id, not in the VEX). Products are listed with and without the `v` prefix because Trivy takes the PURL version from `composer.lock` (`v11.5.14.1`).
-- `release.sh <line>.<n> [--dry-run]` runs on a line branch (`11.5.0` on `11.5`; any other version, a non-line branch, a detached HEAD, an existing tag, an HTTPS `origin` or a dirty tracked tree is refused). It runs `phpunit.unit.xml.dist` and `verify.sh` for every pimcore × admin combination of `.github/workflows/verify.yml`, aborting on a failure, then rewrites patch URLs to the tag, regenerates hashes (`bin/sync-patch-hashes.php`) and the VEX, commits, tags and pushes branch and tag atomically. `main` is fast-forwarded and pushed too when it is an ancestor of HEAD and the branch is the newest line (a later line forked from an older one has `main` as ancestor as well). `--dry-run` runs the checks and prints the remaining steps; it changes nothing. Push over SSH; the HTTPS OAuth token lacks the `workflow` scope.
-- `verify.sh [pimcore-tag] [admin-tag]` applies every patch to pristine release tarballs (needs `gh`); `.github/workflows/verify.yml` runs it on push, PR and weekly for the 11.5.4/11.5.14.1 × 1.7.6/1.7.16 matrix.
+- `advisories.json` is the single source for advisory status. `bin/build-vex.php` generates `vex.openvex.json` (OpenVEX 0.2.0, for Trivy `--vex`) and `audit-ignore.json` (for Composer `config.audit.ignore` and `config.policy.advisories.ignore-id`). Statuses: `fixed`, `affected`, `not_affected` with precondition, `accepted` (not in the VEX, needs `.trivyignore.yaml`), `hardening` (no public advisory, internal `PD-YYYY-NNN` id, not in the VEX). Products are listed with and without the `v` prefix because Trivy takes the PURL version from `composer.lock` (`v10.6.9`). On this branch the only product is `pimcore/pimcore` 10.6.9; the admin UI is part of it.
+- `release.sh <line>.<n> [--dry-run]` runs on a line branch (`11.5.0` on `11.5`; any other version, a non-line branch, a detached HEAD, an existing tag, an HTTPS `origin` or a dirty tracked tree is refused). It runs `phpunit.unit.xml.dist` and `verify.sh` for every tag of the `.github/workflows/verify.yml` matrix, aborting on a failure, then rewrites patch URLs to the tag, regenerates hashes (`bin/sync-patch-hashes.php`) and the VEX, commits, tags and pushes branch and tag atomically. `main` is fast-forwarded and pushed too when it is an ancestor of HEAD and the branch is the newest line (a later line forked from an older one has `main` as ancestor as well). `--dry-run` runs the checks and prints the remaining steps; it changes nothing. Push over SSH; the HTTPS OAuth token lacks the `workflow` scope.
+- `verify.sh [pimcore-tag]` (default `v10.6.9`) applies every patch to the pristine release tarball (needs `gh`) and reports "no patches listed" while the list is empty; `.github/workflows/verify.yml` runs it on push, PR and weekly for `v10.6.9`.
+- PHP 8.1 syntax only in `src/`, `bin/`, `tests/Support`, `tests/Unit` and the patched Pimcore code: no `readonly class`, trait constants, DNF types, standalone `true`/`false`/`null` types or `#[\Override]`; `readonly` goes on promoted properties. `phpstan.neon` sets `phpVersion: 80100`; PHPUnit is `^10.5` (its PHP 8.1 ceiling).
 
 ## Tests
 
-- `tests/*Test.php`: exploit regression tests, one group per CVE. They need a host project with a database. Run inside the project container: copy the repo (without `vendor/`) into the project, e.g. `var/tmp/security-patches`, then `PIMCORE_PROJECT_ROOT=/app vendor/bin/phpunit -c var/tmp/security-patches/phpunit.xml.dist`. Last run (2026-11-03, v1.0.2): 584 tests green on stock (11.5.14.1), 577 on suys-pim11 (11.5.4), both PHP 8.3.36. Reverting a patch with `patch -R` can leave `*.orig` files; run `find vendor/pimcore -name '*.orig' -delete` afterwards. Hosts set `SET time_zone` to PHP's offset in `TranslationGridFilterTest`; `TwigSandboxTest` accepts the 11.5.14.1 `TypeError` from `Mail::renderParams()` (the message is cut at `' in "__string'` although the template is named `pimcore_email_subject`). Running them from the host without a database produces hundreds of errors; that is not a regression.
-- `tests/Unit`: plugin unit tests, `vendor/bin/phpunit -c phpunit.unit.xml.dist`, no host needed.
+- `tests/*Test.php`: exploit regression tests, one group per CVE; none exist yet on this branch, each package adds its own. They need a host project with a database: a disposable Pimcore 10.6.9 install on PHP 8.1 with PHPUnit 10.5, pristine `vendor/`, no `portadesign/*` package (a Docker Compose project with `app` and `db` services; keep its README next to it with start/stop, the rsync of this repo without `vendor/`, `.git` and `.phpunit.cache` into `var/tmp/security-patches`, and the `patch -p1` apply/revert commands). Run `PIMCORE_PROJECT_ROOT=<app root> vendor/bin/phpunit -c var/tmp/security-patches/phpunit.xml.dist [--group <id>]`, then remove the copy and `.phpunit.cache`.
+- 10.6 differs from 11.5: custom reports live in core (`Pimcore\Model\Tool\CustomReport`, not a bundle), the admin UI is `bundles/AdminBundle` inside `pimcore/pimcore`, PHPUnit stops at 10.5, and the demo has no reports (tests create their own). Clear `var/cache` after every apply or revert; reverting with `patch -R` can leave `*.orig` files (`find vendor/pimcore -name '*.orig' -delete`). Residue after exploit tests: orphan `versions` rows and `pd_sec_*` scratch tables. Running them from the host without a database produces hundreds of errors; that is not a regression.
+- `tests/Unit`: plugin unit tests, `vendor/bin/phpunit -c phpunit.unit.xml.dist`, no host needed; run them on PHP 8.1 too (the host container, `composer install` in a copy).
 - `composer phpstan` must be clean.
 
 ## Settled decisions
 
-- Every advisory is patched; nothing is accepted or skipped. WebDAV must stay fully functional, no proxy precondition (owner decision 2026-11-03).
+- Every advisory that affects 10.6.9 is patched; nothing is accepted or skipped. WebDAV must stay fully functional, no proxy precondition (owner decision 2026-11-03).
 - The VEX tells the truth: a CVE is `fixed` only when every path in its advisory is patched.
 - Verification runs on every install; the cost of downloading is avoided by the bundled files.
 - No Packagist publication; vcs repository line in the README.
 - Patches are independent implementations (see Provenance); the repository history starts at v1.0.0 of 2026-11-02.
+- This line is PHP 8.1 and Pimcore 10.6.9 only; nothing from the 11.5 branch is merged, it is ported per patch.
 
-## Open items (reviewer backlog, non-blocking)
+## Open items
 
-1. `composer.json` conflict range allows unverified enterprise releases ≥ 11.5.15 / admin-ui ≥ 1.7.17; VEX lists only 11.5.4 and 11.5.14.1, so Trivy will not match 11.5.5–11.5.13. List every version or verify them with `verify.sh`.
-2. If cweagans is not active (not allowed, or 1.x) the plugin returns silently; print an error.
-3. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
-4. Two data providers in `tests/ClassDefinitionIdentifierTest.php` are empty on a host without classes or reports.
-5. CVE-2026-45703: elements without `view` permission are skipped silently (200, element omitted); no 403.
-6. CVE-2026-45260 known gap kept for compatibility with the tests: Sabre deletes the destination before `Tree::move()` runs, so a failed `publish` check leaves the destination deleted.
-7. `ComposerPlugin` itself has no unit test.
-8. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php` (PHP 8.3 rejects them itself), the assignment-path cases in `tests/CompositeIndexTest.php` and `tests/CompositeIndexLegacyKeyTest.php` load test; `tests/TwigSandboxTest.php` accepts any `substr(): Argument #3` TypeError on 11.5.14.1. Exploit tests leave orphan `versions` rows on the host; run the versions cleanup afterwards.
-9. CustomReports `downloadCsvAction` serves any `report-export-<uniqid>.csv` from the temp dir by name; bind export names to the session (reviewer finding on CVE-2026-45704).
+1. The patch list, `advisories.json`, VEX, `audit-ignore.json` and the exploit tests are empty; ports and new patches arrive per package. Ported 11.5 tests must not use trait constants or other 8.2+ syntax; `tests/Support/ReportScratchTable.php` exposes the table name as `reportTable()`.
+2. `composer.json` conflict range allows unverified enterprise releases of 10.6.9+ below 10.7; the VEX lists only 10.6.9. Verify the others with `verify.sh` or narrow the range.
+3. If cweagans is not active (not allowed, or 1.x) the plugin returns silently; print an error. Matters more here, as Pimcore 10 projects often start on 1.x.
+4. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
+5. `ComposerPlugin` itself has no unit test.
 
 ## Conventions
 
@@ -60,6 +61,6 @@ Every patch is an independent implementation. The inputs were the public advisor
 
 ## Related
 
-- Projects: `suys-pim11` (branch `feat/php83`), `stock` (11.5.14.1, cweagans 2).
+- Projects on the 11.5 line: `suys-pim11` (branch `feat/php83`), `stock` (11.5.14.1, cweagans 2). No Pimcore 10 project is wired to this branch yet.
 - `portadesign/docker-library` PR #6 pins `git` and `patch` in `pimcore-php`.
 - [`security-txt`](https://github.com/portadesign/security-txt): Composer package creating and checking security.txt; unrelated to patches.

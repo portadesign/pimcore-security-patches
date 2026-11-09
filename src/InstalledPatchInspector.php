@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches;
 
-final readonly class InstalledPatchInspector
+final class InstalledPatchInspector
 {
     private const COMMAND_NOT_FOUND = 127;
 
@@ -12,10 +12,10 @@ final readonly class InstalledPatchInspector
      * @param \Closure(\cweagans\Composer\Patch): void $download
      */
     public function __construct(
-        private ProcessRunner $runner,
-        private \Closure $download,
-        private \Composer\IO\IOInterface $io,
-        private string $bundledDirectory,
+        private readonly ProcessRunner $runner,
+        private readonly \Closure $download,
+        private readonly \Composer\IO\IOInterface $io,
+        private readonly string $bundledDirectory,
     ) {
     }
 

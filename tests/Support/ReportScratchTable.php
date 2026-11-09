@@ -6,14 +6,17 @@ namespace Portadesign\PimcoreSecurityPatches\Tests\Support;
 
 trait ReportScratchTable
 {
-    private const REPORT_TABLE = 'pd_sec_report_scratch';
+    protected function reportTable(): string
+    {
+        return 'pd_sec_report_scratch';
+    }
 
     protected function createReportScratchTable(): void
     {
         $db = \Pimcore\Db::get();
-        $db->executeStatement('DROP TABLE IF EXISTS `' . self::REPORT_TABLE . '`');
+        $db->executeStatement('DROP TABLE IF EXISTS `' . $this->reportTable() . '`');
         $db->executeStatement(
-            'CREATE TABLE `' . self::REPORT_TABLE . '` (id INT NOT NULL PRIMARY KEY, note VARCHAR(100), secret VARCHAR(100), updated_at INT)'
+            'CREATE TABLE `' . $this->reportTable() . '` (id INT NOT NULL PRIMARY KEY, note VARCHAR(100), secret VARCHAR(100), updated_at INT)'
         );
 
         $rows = [
@@ -25,13 +28,13 @@ trait ReportScratchTable
         ];
 
         foreach ($rows as [$id, $note, $secret, $updatedAt]) {
-            $db->insert(self::REPORT_TABLE, ['id' => $id, 'note' => $note, 'secret' => $secret, 'updated_at' => $updatedAt]);
+            $db->insert($this->reportTable(), ['id' => $id, 'note' => $note, 'secret' => $secret, 'updated_at' => $updatedAt]);
         }
     }
 
     protected function dropReportScratchTable(): void
     {
-        \Pimcore\Db::get()->executeStatement('DROP TABLE IF EXISTS `' . self::REPORT_TABLE . '`');
+        \Pimcore\Db::get()->executeStatement('DROP TABLE IF EXISTS `' . $this->reportTable() . '`');
     }
 
     /**
@@ -40,14 +43,14 @@ trait ReportScratchTable
     protected function reportConfig(array $overrides = []): \stdClass
     {
         return (object) array_merge(
-            ['type' => 'sql', 'sql' => 'id, note', 'from' => self::REPORT_TABLE, 'where' => '', 'groupby' => ''],
+            ['type' => 'sql', 'sql' => 'id, note', 'from' => $this->reportTable(), 'where' => '', 'groupby' => ''],
             $overrides,
         );
     }
 
-    protected function reportAdapter(\stdClass $config): \Pimcore\Bundle\CustomReportsBundle\Tool\Adapter\Sql
+    protected function reportAdapter(\stdClass $config): \Pimcore\Model\Tool\CustomReport\Adapter\Sql
     {
-        return new \Pimcore\Bundle\CustomReportsBundle\Tool\Adapter\Sql($config);
+        return new \Pimcore\Model\Tool\CustomReport\Adapter\Sql($config);
     }
 
     /**
@@ -57,7 +60,7 @@ trait ReportScratchTable
     {
         return array_map(
             'strval',
-            \Pimcore\Db::get()->fetchFirstColumn('SELECT secret FROM `' . self::REPORT_TABLE . '` ORDER BY id'),
+            \Pimcore\Db::get()->fetchFirstColumn('SELECT secret FROM `' . $this->reportTable() . '` ORDER BY id'),
         );
     }
 }

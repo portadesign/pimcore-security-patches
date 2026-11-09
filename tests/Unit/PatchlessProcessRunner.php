@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches\Tests\Unit;
 
-final readonly class PatchlessProcessRunner implements \Portadesign\PimcoreSecurityPatches\ProcessRunner
+final class PatchlessProcessRunner implements \Portadesign\PimcoreSecurityPatches\ProcessRunner
 {
-    public function __construct(private \Portadesign\PimcoreSecurityPatches\ProcessRunner $inner)
+    public function __construct(private readonly \Portadesign\PimcoreSecurityPatches\ProcessRunner $inner)
     {
     }
 

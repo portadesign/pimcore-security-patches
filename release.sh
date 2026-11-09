@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: ./release.sh <line>.<n> [--dry-run]   (e.g. 11.5.0 on branch 11.5)" >&2
+  echo "usage: ./release.sh <line>.<n> [--dry-run]   (e.g. 10.6.0 on branch 10.6)" >&2
   exit 2
 }
 die() {
@@ -50,19 +50,17 @@ step "clean tree"
 step "unit tests"
 vendor/bin/phpunit -c phpunit.unit.xml.dist
 
-step "verify.sh for every combination in .github/workflows/verify.yml"
+step "verify.sh for every tag in .github/workflows/verify.yml"
 pimcore_tags=$(matrix pimcore)
-admin_tags=$(matrix admin)
-[ -n "$pimcore_tags" ] && [ -n "$admin_tags" ] || die "no pimcore/admin matrix found in .github/workflows/verify.yml"
+[ -n "$pimcore_tags" ] || die "no pimcore matrix found in .github/workflows/verify.yml"
 for pimcore_tag in $pimcore_tags; do
-  for admin_tag in $admin_tags; do
-    echo "-- pimcore ${pimcore_tag} / admin-ui ${admin_tag}"
-    ./verify.sh "$pimcore_tag" "$admin_tag" || die "verify.sh failed for ${pimcore_tag} / ${admin_tag}"
-  done
+  echo "-- pimcore ${pimcore_tag}"
+  ./verify.sh "$pimcore_tag" || die "verify.sh failed for ${pimcore_tag}"
 done
 
 step "patch files"
 for f in patches/*.patch; do
+  [ -e "$f" ] || continue
   grep -q "^diff --git" "$f" || die "no diff in $f"
 done
 
