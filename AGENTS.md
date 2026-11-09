@@ -8,6 +8,13 @@ Pimcore 11 reached end of life with 11.5.14.1 (admin-ui-classic-bundle 1.7.16) w
 
 Public GitHub repository, not on Packagist. Installation is documented in `README.md` and must stay at a handful of copy-paste commands.
 
+## Lines, branches, name
+
+- Package `portadesign/pimcore-security-patches` (namespace `Portadesign\PimcoreSecurityPatches`). It replaces `portadesign/pimcore-11-security-patches`, whose tags v1.0.0–v1.0.3 stay untouched. The GitHub repository is still `portadesign/pimcore-11-security-patches`; patch URLs and the VEX `@id` use that path until the owner renames it.
+- Versioned like Pimcore: one branch and one tag series per Pimcore line. Branch `11.5` (Pimcore 11.5.x, admin-ui-classic-bundle 1.7.x) releases `v11.5.<n>`; branch `10.6` (Pimcore 10.6.x, PHP 8.1) releases `v10.6.<n>`. A project requires `^11.5` or `^10.6`. `conflict` in each branch's `composer.json` pins its line. The 10.6 line exists; its patch list follows and is documented on that branch.
+- `main` follows the newest line by fast-forward. A fix that applies to several lines is made per branch, not merged across: patches, tests and manifests differ per line.
+- The `.github/workflows/verify.yml` matrix is per branch (the versions of that line). Scheduled workflows run only on the default branch, so the weekly run covers the line `main` points to.
+
 ## Provenance
 
 Every patch is an independent implementation. The inputs were the public advisory text (GHSA/NVD), the GPLv3 Pimcore 11.5.4 and 11.5.14.1 sources and the exploit tests in `tests/`. No other implementation of a fix, no newer Pimcore release and no third-party fork was consulted. Keep it that way: a new patch starts from the advisory and a failing test, never from somebody else's diff. Do not add references to other implementations to patch headers, README, CHANGELOG or VEX.
@@ -18,7 +25,7 @@ Every patch is an independent implementation. The inputs were the public advisor
 - `src/ComposerPlugin.php` subscribes to `post-install-cmd` and `post-update-cmd`. `detectDrift()` compares `patches.lock.json` with the resolved patch set; `InstalledPatchInspector` checks that each locked patch is applied (`patch -R --dry-run`, fallback `git apply --check -R` with `GIT_CEILING_DIRECTORIES`; both missing → warning, no repatch). Drift or a missing patch triggers `patches-relock` and `patches-repatch` in a child Composer process (`PatchCommandRunner` over `ComposerProcessRunner`, in the project directory, forwarding `--ignore-platform-req[s]` as `COMPOSER_IGNORE_PLATFORM_REQ[S]`), guarded against recursion by `PORTADESIGN_PATCHES_SYNC`. Running cweagans in-process fails because Composer loads the plugin class twice. A non-zero child exit throws with the child output. After the run `PatchInspectionGuard` re-inspects every patch from the fresh lock and checks the patched package directories; it throws when a patch is still missing or when nothing could be verified (neither `patch` nor `git`), because `patches-repatch` in composer-patches 2 exits 0 even when its inner `install` fails.
 - Bundled `patches/*` with a matching `sha256` are used for verification instead of a download; download failures warn and skip.
 - `advisories.json` is the single source for advisory status. `bin/build-vex.php` generates `vex.openvex.json` (OpenVEX 0.2.0, for Trivy `--vex`) and `audit-ignore.json` (for Composer `config.audit.ignore` and `config.policy.advisories.ignore-id`). Statuses: `fixed`, `affected`, `not_affected` with precondition, `accepted` (not in the VEX, needs `.trivyignore.yaml`), `hardening` (no public advisory, internal `PD-YYYY-NNN` id, not in the VEX). Products are listed with and without the `v` prefix because Trivy takes the PURL version from `composer.lock` (`v11.5.14.1`).
-- `release.sh <version>` rewrites patch URLs to the tag, regenerates hashes (`bin/sync-patch-hashes.php`) and the VEX, commits, tags, pushes. Push over SSH; the HTTPS OAuth token lacks the `workflow` scope.
+- `release.sh <line>.<n> [--dry-run]` runs on a line branch (`11.5.0` on `11.5`; any other version, a non-line branch, a detached HEAD, an existing tag, an HTTPS `origin` or a dirty tracked tree is refused). It runs `phpunit.unit.xml.dist` and `verify.sh` for every pimcore × admin combination of `.github/workflows/verify.yml`, aborting on a failure, then rewrites patch URLs to the tag, regenerates hashes (`bin/sync-patch-hashes.php`) and the VEX, commits, tags and pushes branch and tag atomically. `main` is fast-forwarded and pushed too when it is an ancestor of HEAD and the branch is the newest line (a later line forked from an older one has `main` as ancestor as well). `--dry-run` runs the checks and prints the remaining steps; it changes nothing. Push over SSH; the HTTPS OAuth token lacks the `workflow` scope.
 - `verify.sh [pimcore-tag] [admin-tag]` applies every patch to pristine release tarballs (needs `gh`); `.github/workflows/verify.yml` runs it on push, PR and weekly for the 11.5.4/11.5.14.1 × 1.7.6/1.7.16 matrix.
 
 ## Tests
@@ -40,13 +47,12 @@ Every patch is an independent implementation. The inputs were the public advisor
 1. `composer.json` conflict range allows unverified enterprise releases ≥ 11.5.15 / admin-ui ≥ 1.7.17; VEX lists only 11.5.4 and 11.5.14.1, so Trivy will not match 11.5.5–11.5.13. List every version or verify them with `verify.sh`.
 2. If cweagans is not active (not allowed, or 1.x) the plugin returns silently; print an error.
 3. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
-4. `release.sh` has no clean-tree or `main` guard and does not run `verify.sh` before tagging.
-5. Two data providers in `tests/ClassDefinitionIdentifierTest.php` are empty on a host without classes or reports.
-6. CVE-2026-45703: elements without `view` permission are skipped silently (200, element omitted); no 403.
-7. CVE-2026-45260 known gap kept for compatibility with the tests: Sabre deletes the destination before `Tree::move()` runs, so a failed `publish` check leaves the destination deleted.
-8. `ComposerPlugin` itself has no unit test.
-9. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php` (PHP 8.3 rejects them itself), the assignment-path cases in `tests/CompositeIndexTest.php` and `tests/CompositeIndexLegacyKeyTest.php` load test; `tests/TwigSandboxTest.php` accepts any `substr(): Argument #3` TypeError on 11.5.14.1. Exploit tests leave orphan `versions` rows on the host; run the versions cleanup afterwards.
-10. CustomReports `downloadCsvAction` serves any `report-export-<uniqid>.csv` from the temp dir by name; bind export names to the session (reviewer finding on CVE-2026-45704).
+4. Two data providers in `tests/ClassDefinitionIdentifierTest.php` are empty on a host without classes or reports.
+5. CVE-2026-45703: elements without `view` permission are skipped silently (200, element omitted); no 403.
+6. CVE-2026-45260 known gap kept for compatibility with the tests: Sabre deletes the destination before `Tree::move()` runs, so a failed `publish` check leaves the destination deleted.
+7. `ComposerPlugin` itself has no unit test.
+8. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php` (PHP 8.3 rejects them itself), the assignment-path cases in `tests/CompositeIndexTest.php` and `tests/CompositeIndexLegacyKeyTest.php` load test; `tests/TwigSandboxTest.php` accepts any `substr(): Argument #3` TypeError on 11.5.14.1. Exploit tests leave orphan `versions` rows on the host; run the versions cleanup afterwards.
+9. CustomReports `downloadCsvAction` serves any `report-export-<uniqid>.csv` from the temp dir by name; bind export names to the session (reviewer finding on CVE-2026-45704).
 
 ## Conventions
 

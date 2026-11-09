@@ -16,7 +16,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-27461-dependency-rlike.patch",
-            "reason": "CVE-2026-27461 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-27461 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-55634",
@@ -24,7 +24,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-55634-class-field-name-rce.patch",
-            "reason": "CVE-2026-55634 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-55634 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-11407",
@@ -32,7 +32,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-            "reason": "CVE-2026-11407 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-5394",
@@ -40,7 +40,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-5394-composite-index-sqli.patch",
-            "reason": "CVE-2026-5394 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-5394 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-44739",
@@ -48,7 +48,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-44739-custom-reports-sql.patch",
-            "reason": "CVE-2026-44739 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-44739 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-55416",
@@ -56,7 +56,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-55416-custom-reports-sql-fragments.patch",
-            "reason": "CVE-2026-55416 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-55416 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-55220",
@@ -64,7 +64,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-55220-unserialize-hardening.patch",
-            "reason": "CVE-2026-55220 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-55220 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-45162",
@@ -72,7 +72,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-55220-unserialize-hardening.patch, patches/pimcore-CVE-2026-45162-unserialize-remaining.patch, patches/admin-ui-classic-bundle-CVE-2026-45162-dashboard.patch",
-            "reason": "CVE-2026-45162 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "PD-2026-001",
@@ -96,7 +96,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-55072-class-definition-id-regex.patch",
-            "reason": "CVE-2026-55072 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-55072 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-44741",
@@ -104,7 +104,7 @@
             "status": "fixed",
             "package": "pimcore/admin-ui-classic-bundle",
             "patch": "patches/admin-ui-classic-bundle-CVE-2026-44741-translation-grid.patch",
-            "reason": "CVE-2026-44741 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-44741 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-45703",
@@ -112,7 +112,7 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-45703-wordexport-view-permission.patch",
-            "reason": "CVE-2026-45703 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-45703 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-45260",
@@ -120,14 +120,14 @@
             "status": "fixed",
             "package": "pimcore/pimcore",
             "patch": "patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
-            "reason": "CVE-2026-45260 fixed by portadesign/pimcore-11-security-patches"
+            "reason": "CVE-2026-45260 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "CVE-2026-45704",
             "pksa": "PKSA-vd5r-2gyh-m6cc",
             "status": "fixed",
             "package": "pimcore/pimcore",
-            "reason": "CVE-2026-45704 fixed by portadesign/pimcore-11-security-patches",
+            "reason": "CVE-2026-45704 fixed by portadesign/pimcore-security-patches",
             "patch": "patches/pimcore-CVE-2026-45704-custom-reports-share.patch"
         }
     ]

@@ -1,4 +1,4 @@
-# pimcore-11-security-patches
+# pimcore-security-patches
 
 Security patches for `pimcore/pimcore` 11.5.4–11.5.14.1 and `pimcore/admin-ui-classic-bundle` 1.7.6–1.7.16, applied by [cweagans/composer-patches](https://github.com/cweagans/composer-patches) 2.
 
@@ -9,8 +9,8 @@ Needs Composer 2 and PHP ≥ 8.2. Not on Packagist.
 ```bash
 composer config repositories.pimcore-11-security-patches vcs https://github.com/portadesign/pimcore-11-security-patches
 composer config allow-plugins.cweagans/composer-patches true
-composer config allow-plugins.portadesign/pimcore-11-security-patches true
-composer require portadesign/pimcore-11-security-patches
+composer config allow-plugins.portadesign/pimcore-security-patches true
+composer require portadesign/pimcore-security-patches:^11.5
 bin/console cache:clear
 ```
 
@@ -18,6 +18,23 @@ Commit `composer.json`, `composer.lock` and `patches.lock.json`. Every `composer
 
 - Composer 2.10+ blocks `pimcore/pimcore` because of open advisories: put the `config.policy` part of `audit-ignore.json` into `composer.json` before `composer require`.
 - Project on `cweagans/composer-patches` 1.x: `composer remove cweagans/composer-patches`, delete `patches.lock.json`, then the steps above.
+
+## Versions
+
+One branch and one tag series per Pimcore line; the version is the line: `^11.5` never installs a 10.6 patch set.
+
+| Pimcore | Branch | Tags | Require |
+| --- | --- | --- | --- |
+| 10.6.x | `10.6` | `v10.6.<n>` | `^10.6` |
+| 11.5.x | `11.5` | `v11.5.<n>` | `^11.5` |
+
+`portadesign/pimcore-11-security-patches` v1.0.x is superseded. Migration from it:
+
+```bash
+composer remove portadesign/pimcore-11-security-patches
+composer config allow-plugins.portadesign/pimcore-11-security-patches --unset && composer config allow-plugins.portadesign/pimcore-security-patches true
+composer require portadesign/pimcore-security-patches:^11.5
+```
 
 ## Patches
 
@@ -50,13 +67,13 @@ All patches are verified on 11.5.4, 11.5.14.1 / 1.7.6, 1.7.16. Each patch file s
 - uses: aquasecurity/trivy-action@0.28.0
   with: { scan-type: fs, scan-ref: ., scanners: vuln, severity: "HIGH,CRITICAL", exit-code: "1" }
   env:
-    TRIVY_VEX: vendor/portadesign/pimcore-11-security-patches/vex.openvex.json
+    TRIVY_VEX: vendor/portadesign/pimcore-security-patches/vex.openvex.json
 ```
 
 ```yaml
 # trivy.yaml for CLI runs
 vulnerability:
-  vex: [vendor/portadesign/pimcore-11-security-patches/vex.openvex.json]
+  vex: [vendor/portadesign/pimcore-security-patches/vex.openvex.json]
 ```
 
 Without `vendor/` in CI, copy `vex.openvex.json` into the project and point `TRIVY_VEX` there. Both lists hold only while the package is installed and its patches are applied.
@@ -66,15 +83,15 @@ Without `vendor/` in CI, copy `vex.openvex.json` into the project and point `TRI
 - `./verify.sh [pimcore-tag] [admin-ui-tag]`: every patch applies to pristine release tarballs (needs `gh`); CI runs it on push and weekly.
 - New patch: failing test in `tests/`, patch with header, entry in `extra.patches`, table row, `./verify.sh`.
 - Status in `advisories.json`; `php bin/build-vex.php` regenerates `vex.openvex.json` and `audit-ignore.json`.
-- Release: `./release.sh <version>` (pins patch URLs to the tag, syncs `sha256`, rebuilds the VEX, commits, tags, pushes).
+- Release: `./release.sh <line>.<n> [--dry-run]` on the line branch (e.g. `11.5.0` on `11.5`). Needs a clean tree, runs the unit tests and `verify.sh` for every combination in `.github/workflows/verify.yml`, pins patch URLs to the tag, syncs `sha256`, rebuilds the VEX, commits, tags and pushes branch and tag over SSH; fast-forwards `main` when this is the newest line.
 
 ## Tests
 
-Exploit tests need a host project with a database (dist install omits `tests/`: clone the repo or `composer reinstall portadesign/pimcore-11-security-patches --prefer-source`). They create and remove their own fixtures.
+Exploit tests need a host project with a database (dist install omits `tests/`: clone the repo or `composer reinstall portadesign/pimcore-security-patches --prefer-source`). They create and remove their own fixtures.
 
 ```bash
-T="-c vendor/portadesign/pimcore-11-security-patches/phpunit.xml.dist"; vendor/bin/phpunit $T
-(cd vendor/pimcore/pimcore && git apply -R ../../portadesign/pimcore-11-security-patches/patches/pimcore-CVE-2026-27461-dependency-rlike.patch) && vendor/bin/phpunit $T --group CVE-2026-27461   # must fail
+T="-c vendor/portadesign/pimcore-security-patches/phpunit.xml.dist"; vendor/bin/phpunit $T
+(cd vendor/pimcore/pimcore && git apply -R ../../portadesign/pimcore-security-patches/patches/pimcore-CVE-2026-27461-dependency-rlike.patch) && vendor/bin/phpunit $T --group CVE-2026-27461   # must fail
 composer patches-repatch && vendor/bin/phpunit $T --group CVE-2026-27461   # must pass
 ```
 

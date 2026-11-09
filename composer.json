@@ -1,5 +1,5 @@
 {
-    "name": "portadesign/pimcore-11-security-patches",
+    "name": "portadesign/pimcore-security-patches",
     "description": "Security hardening of pimcore/pimcore 11.5.x and pimcore/admin-ui-classic-bundle 1.7.x against published CVEs, applied automatically on composer require, install and update",
     "type": "composer-plugin",
     "license": "GPL-3.0-or-later",

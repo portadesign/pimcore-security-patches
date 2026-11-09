@@ -52,7 +52,7 @@ final readonly class InstalledPatchInspector
         }
 
         if ($toolsUnavailable) {
-            $this->io->writeError(messages: 'pimcore-11-security-patches: neither patch nor git found, cannot verify patches');
+            $this->io->writeError(messages: 'pimcore-security-patches: neither patch nor git found, cannot verify patches');
         }
 
         return ['checked' => $checked, 'missing' => $missing];
@@ -100,7 +100,7 @@ final readonly class InstalledPatchInspector
             ($this->download)($patch);
         } catch (\Throwable $exception) {
             $this->io->writeError(messages: sprintf(
-                'pimcore-11-security-patches: cannot download %s, skipping its verification: %s',
+                'pimcore-security-patches: cannot download %s, skipping its verification: %s',
                 $patch->url,
                 $exception->getMessage(),
             ));

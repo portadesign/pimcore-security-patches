@@ -8,7 +8,7 @@
          failOnRisky="true"
          beStrictAboutOutputDuringTests="true">
     <testsuites>
-        <testsuite name="pimcore-11-security-patches">
+        <testsuite name="pimcore-security-patches">
             <directory>tests</directory>
             <exclude>tests/Unit</exclude>
         </testsuite>

@@ -55,17 +55,17 @@ final readonly class ComposerPlugin implements \Composer\Plugin\PluginInterface,
             $inspection = $this->inspectInstalledPatches(composer: $composer, patchesPlugin: $patchesPlugin, io: $io);
             if ([] === $inspection['missing']) {
                 if ($inspection['checked'] > 0) {
-                    $io->write(messages: sprintf('pimcore-11-security-patches: all %d patches applied', $inspection['checked']));
+                    $io->write(messages: sprintf('pimcore-security-patches: all %d patches applied', $inspection['checked']));
                 }
 
                 return;
             }
 
             foreach ($inspection['missing'] as $package => $count) {
-                $io->write(messages: sprintf('pimcore-11-security-patches: %d patch(es) missing in %s, re-applying', $count, $package));
+                $io->write(messages: sprintf('pimcore-security-patches: %d patch(es) missing in %s, re-applying', $count, $package));
             }
         } else {
-            $io->write(messages: sprintf('pimcore-11-security-patches: %s, relocking and re-applying patches', $reason));
+            $io->write(messages: sprintf('pimcore-security-patches: %s, relocking and re-applying patches', $reason));
         }
 
         $patched = $this->installedPatchedPackages(composer: $composer, collection: $resolved);
@@ -73,7 +73,7 @@ final readonly class ComposerPlugin implements \Composer\Plugin\PluginInterface,
         $this->assertInstalled(composer: $composer, patchedPackages: $patched, output: $output);
         $this->assertPatched(composer: $composer, patchesPlugin: $patchesPlugin, io: $io, resolved: $resolved, patchedPackages: $patched, output: $output);
         $io->write(messages: sprintf(
-            'pimcore-11-security-patches: patches applied to %s',
+            'pimcore-security-patches: patches applied to %s',
             [] === $patched ? 'no packages' : implode(separator: ', ', array: $patched),
         ));
     }

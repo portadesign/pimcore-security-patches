@@ -27,7 +27,7 @@ $manifest = json_decode(json: (string) file_get_contents(filename: $root . '/adv
 
 $vexPath = $root . '/vex.openvex.json';
 $version = 1;
-$tooling = 'pimcore-11-security-patches';
+$tooling = 'pimcore-security-patches';
 if (is_file(filename: $vexPath)) {
     $previous = json_decode(json: (string) file_get_contents(filename: $vexPath), associative: true, flags: JSON_THROW_ON_ERROR);
     if (is_array($previous)) {
@@ -36,7 +36,7 @@ if (is_file(filename: $vexPath)) {
     }
 }
 if (is_string($options['tooling'] ?? null)) {
-    $tooling = 'pimcore-11-security-patches ' . $options['tooling'];
+    $tooling = 'pimcore-security-patches ' . $options['tooling'];
 }
 
 $timestamp = gmdate(format: 'Y-m-d\TH:i:s\Z');
