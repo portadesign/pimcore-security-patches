@@ -84,11 +84,6 @@ final class PhpSpreadsheetXxeTest extends \PHPUnit\Framework\TestCase
         $composer = json_decode((string) file_get_contents(dirname(__DIR__) . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
         $constraint = $composer['conflict']['phpoffice/phpspreadsheet'] ?? null;
 
-        if (null === $constraint && false !== getenv('PD_COMPOSER_CONFLICT_MANIFEST')) {
-            $manifest = json_decode((string) file_get_contents((string) getenv('PD_COMPOSER_CONFLICT_MANIFEST')), true, 512, JSON_THROW_ON_ERROR);
-            $constraint = $manifest['composer_conflict']['phpoffice/phpspreadsheet'] ?? null;
-        }
-
         $this->assertIsString($constraint, 'composer.json declares no conflict for phpoffice/phpspreadsheet');
 
         return $constraint;
