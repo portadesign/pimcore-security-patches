@@ -8,10 +8,17 @@ trait AdminUserSession
 {
     protected function authenticate(?\Pimcore\Model\User $user): void
     {
-        $this->tokenStorage()->setToken(null === $user ? null : new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken(
-            new \Pimcore\Security\User\User($user),
+        if (null === $user) {
+            $this->tokenStorage()->setToken(null);
+
+            return;
+        }
+
+        $proxy = new \Pimcore\Security\User\User($user);
+        $this->tokenStorage()->setToken(new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken(
+            $proxy,
             'pimcore_admin',
-            [],
+            $proxy->getRoles(),
         ));
     }
 
