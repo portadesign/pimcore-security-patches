@@ -104,7 +104,7 @@ final class NotificationMailRenderingTest extends \PHPUnit\Framework\TestCase
     public function testWorkflowNotificationIsSentAsBuiltWithAbsolutePathsInlineCssAndPlainText(): void
     {
         file_put_contents($this->templateFile(), <<<'TWIG'
-<html><head><style>p { color: red; }</style></head><body><p>{{ subject.getKey() }}|{{ note_description }}</p><a href="/relative/page">link</a><img src="/img/logo.png"></body></html>
+<html><head><style>p { color: red; }</style></head><body><style>.inner { color: blue; }</style><script>var pdSecP3 = 1;</script><p>{{ subject.getKey() }}|{{ note_description }}</p><a href="/relative/page">link</a><img src="/img/logo.png"></body></html>
 TWIG);
         $this->createNote('pd2026002-note-{{7*7}}');
 
@@ -118,7 +118,8 @@ TWIG);
                     . "<html>\n"
                     . "<head><style>p { color: red; }</style></head>\n"
                     . "<body>\n"
-                    . "<p style=\"color: red;\">notified-{{7*7}}|pd2026002-note-{{7*7}}</p>\n"
+                    . "<style>.inner { color: blue; }</style>\n"
+                    . "<script>var pdSecP3 = 1;</script><p style=\"color: red;\">notified-{{7*7}}|pd2026002-note-{{7*7}}</p>\n"
                     . "<a href=\"http://configured.example.test/relative/page\">link</a><img src=\"http://configured.example.test/img/logo.png\">\n"
                     . "</body>\n"
                     . "</html>",
