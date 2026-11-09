@@ -126,9 +126,10 @@ TWIG);
             ],
             ['subjects' => $this->sentSubjects, 'html' => $this->sentHtml],
         );
-        $this->assertCount(1, $this->sentText);
-        $this->assertStringContainsString('notified-{{7\*7}}|pd2026002-note-{{7\*7}}', $this->sentText[0]);
-        $this->assertStringContainsString('[link](http://configured.example.test/relative/page)', $this->sentText[0]);
+        $this->assertSame(
+            ["notified-{{7\\*7}}|pd2026002-note-{{7\\*7}}\n\n[link](http://configured.example.test/relative/page)![](http://configured.example.test/img/logo.png)"],
+            $this->sentText,
+        );
     }
 
     public function testWorkflowDeeplinkUsesTheConfiguredDomainNotTheRequestHost(): void
