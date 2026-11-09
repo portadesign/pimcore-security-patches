@@ -17,8 +17,11 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
 
     private \Pimcore\Model\Asset\Image $asset;
 
+    private int $lastMessageId = 0;
+
     protected function setUp(): void
     {
+        $this->lastMessageId = (int) \Pimcore\Db::get()->fetchOne('SELECT COALESCE(MAX(id), 0) FROM messenger_messages');
         $this->removeFixtures();
 
         $user = \Pimcore\Model\User::create([
@@ -34,7 +37,12 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
         $asset->setParentId(1);
         $asset->setFilename(self::ASSET_KEY);
         $asset->setData((string) base64_decode(self::PNG, true));
-        $asset->save();
+        \Pimcore\Model\Version::disable();
+        try {
+            $asset->save();
+        } finally {
+            \Pimcore\Model\Version::enable();
+        }
         $this->asset = $asset;
     }
 
@@ -42,6 +50,7 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
     {
         $this->authenticate(null);
         $this->removeFixtures();
+        \Pimcore\Db::get()->executeStatement('DELETE FROM messenger_messages WHERE id > ?', [$this->lastMessageId]);
     }
 
     public function testEditorResponseCarriesExactContentSecurityPolicy(): void
@@ -67,7 +76,7 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
         $this->assertNotSame($this->nonceOf($this->editor()), $this->nonceOf($this->editor()));
     }
 
-    public function testEditorMarkupContainsNoInlineEventHandler(): void
+    public function testControlEditorMarkupContainsNoInlineEventHandler(): void
     {
         $this->assertSame(0, preg_match('/\son[a-z]+\s*=/i', (string) $this->editor()->getContent()));
     }
@@ -82,6 +91,39 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
 
     public function testAdminCspListenerKeepsThePolicyOfTheEditor(): void
     {
+        $request = $this->adminRequest();
+        $response = $this->editor($request);
+        $policy = $response->headers->get('Content-Security-Policy');
+
+        $this->runAdminCspListener($request, $response);
+
+        $this->assertSame($policy, $response->headers->get('Content-Security-Policy'));
+    }
+
+    public function testControlAdminCspListenerStillSetsTheAdminPolicyWithoutTheAttribute(): void
+    {
+        $request = $this->adminRequest();
+        $response = new \Symfony\Component\HttpFoundation\Response('other admin response');
+
+        $this->runAdminCspListener($request, $response);
+
+        $this->assertSame(
+            \Pimcore::getContainer()->get(\Pimcore\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler::class)->getCspHeader(),
+            $response->headers->get('Content-Security-Policy'),
+        );
+    }
+
+    private function adminRequest(): \Symfony\Component\HttpFoundation\Request
+    {
+        $request = \Symfony\Component\HttpFoundation\Request::create('/admin/asset/image-editor?id=' . $this->asset->getId());
+        \Pimcore::getContainer()->get(\Pimcore\Http\Request\Resolver\PimcoreContextResolver::class)
+            ->setPimcoreContext($request, \Pimcore\Http\Request\Resolver\PimcoreContextResolver::CONTEXT_ADMIN);
+
+        return $request;
+    }
+
+    private function runAdminCspListener(\Symfony\Component\HttpFoundation\Request $request, \Symfony\Component\HttpFoundation\Response $response): void
+    {
         $container = \Pimcore::getContainer();
         $property = new \ReflectionProperty(\Pimcore\Config::class, 'systemConfig');
         $original = $property->getValue();
@@ -90,18 +132,12 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
         $property->setValue(null, $enabled);
 
         try {
-            $request = \Symfony\Component\HttpFoundation\Request::create('/admin/asset/image-editor?id=' . $this->asset->getId());
-            $resolver = $container->get(\Pimcore\Http\Request\Resolver\PimcoreContextResolver::class);
-            $resolver->setPimcoreContext($request, \Pimcore\Http\Request\Resolver\PimcoreContextResolver::CONTEXT_ADMIN);
-            $response = $this->editor();
-            $policy = $response->headers->get('Content-Security-Policy');
-
             $listener = new \Pimcore\Bundle\AdminBundle\EventListener\AdminSecurityListener(
                 $container->get(\Pimcore\Http\RequestHelper::class),
                 $container->get(\Pimcore\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler::class),
                 new \Pimcore\Config(),
             );
-            $listener->setPimcoreContextResolver($resolver);
+            $listener->setPimcoreContextResolver($container->get(\Pimcore\Http\Request\Resolver\PimcoreContextResolver::class));
             $listener->onKernelResponse(new \Symfony\Component\HttpKernel\Event\ResponseEvent(
                 $container->get('kernel'),
                 $request,
@@ -111,8 +147,6 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
         } finally {
             $property->setValue(null, $original);
         }
-
-        $this->assertSame($policy, $response->headers->get('Content-Security-Policy'));
     }
 
     private function signIn(\Pimcore\Model\User $user): void
@@ -121,11 +155,11 @@ final class ImageEditorContentSecurityPolicyTest extends \PHPUnit\Framework\Test
         $this->tokenStorage()->setToken(new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken($proxy, 'pimcore_admin', $proxy->getRoles()));
     }
 
-    private function editor(): \Symfony\Component\HttpFoundation\Response
+    private function editor(?\Symfony\Component\HttpFoundation\Request $request = null): \Symfony\Component\HttpFoundation\Response
     {
         $controller = \Pimcore::getContainer()->get(\Pimcore\Bundle\AdminBundle\Controller\Admin\Asset\AssetController::class);
 
-        return $controller->imageEditorAction(new \Symfony\Component\HttpFoundation\Request(['id' => $this->asset->getId()]));
+        return $controller->imageEditorAction($request ?? new \Symfony\Component\HttpFoundation\Request(['id' => $this->asset->getId()]));
     }
 
     private function nonceOf(\Symfony\Component\HttpFoundation\Response $response): string

@@ -46,7 +46,7 @@ final class MinipaintJqueryTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($html, $this->prefilter($html)['output']);
     }
 
-    public function testBundleStillExportsJquery341(): void
+    public function testControlBundleStillExportsJquery341(): void
     {
         $this->assertSame('3.4.1', $this->prefilter('<b></b>')['jquery']);
     }

@@ -22,7 +22,7 @@ final class PhpSpreadsheetXxeTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    public function testInstalledVersionIsNotBelowFloor(): void
+    public function testControlInstalledVersionIsNotBelowFloor(): void
     {
         $installed = \Composer\InstalledVersions::getVersion('phpoffice/phpspreadsheet');
 
@@ -31,6 +31,29 @@ final class PhpSpreadsheetXxeTest extends \PHPUnit\Framework\TestCase
             version_compare($installed, self::FLOOR, '>='),
             sprintf('phpoffice/phpspreadsheet %s is below %s; run composer update phpoffice/phpspreadsheet', $installed, self::FLOOR),
         );
+    }
+
+    /**
+     * @return array<string, array{string, bool}>
+     */
+    public static function conflictProvider(): array
+    {
+        return [
+            'before the advisory fix' => ['1.29.0', true],
+            'advisory fix, below the floor' => ['1.29.1', true],
+            'last version below the floor' => ['1.30.6', true],
+            'floor' => ['1.30.7', false],
+            'above the floor' => ['1.30.8', false],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('conflictProvider')]
+    public function testComposerConflictRejectsVersionsBelowFloor(string $version, bool $conflicts): void
+    {
+        $constraint = $this->conflictConstraint();
+
+        $this->assertSame(1, preg_match('/^<\s*(\d+(?:\.\d+)*)$/', $constraint, $matches), 'conflict constraint is not of the form <x.y.z: ' . $constraint);
+        $this->assertSame($conflicts, version_compare($version, $matches[1], '<'));
     }
 
     public function testScannerRejectsDoctypeHiddenByUtf7BehindSingleQuotedEncoding(): void
@@ -54,6 +77,21 @@ final class PhpSpreadsheetXxeTest extends \PHPUnit\Framework\TestCase
         $this->expectException(\PhpOffice\PhpSpreadsheet\Reader\Exception::class);
 
         \PhpOffice\PhpSpreadsheet\IOFactory::load($this->workbook);
+    }
+
+    private function conflictConstraint(): string
+    {
+        $composer = json_decode((string) file_get_contents(dirname(__DIR__) . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
+        $constraint = $composer['conflict']['phpoffice/phpspreadsheet'] ?? null;
+
+        if (null === $constraint && false !== getenv('PD_COMPOSER_CONFLICT_MANIFEST')) {
+            $manifest = json_decode((string) file_get_contents((string) getenv('PD_COMPOSER_CONFLICT_MANIFEST')), true, 512, JSON_THROW_ON_ERROR);
+            $constraint = $manifest['composer_conflict']['phpoffice/phpspreadsheet'] ?? null;
+        }
+
+        $this->assertIsString($constraint, 'composer.json declares no conflict for phpoffice/phpspreadsheet');
+
+        return $constraint;
     }
 
     private function scanner(): \PhpOffice\PhpSpreadsheet\Reader\Security\XmlScanner

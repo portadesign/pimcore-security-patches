@@ -2,15 +2,16 @@ CVE: CVE-2020-11022, CVE-2020-11023 (jQuery 3.4.1 inside minipaint)
 Advisory: GHSA-jmh9-6rjq-gjh9
 Package: pimcore/pimcore
 Verified: 10.6.9
-Summary: The image editor response (AssetController::imageEditorAction, imageEditor.html.twig) carries its own Content-Security-Policy: script-src 'self' with a per-response nonce for the one inline script, no 'unsafe-inline' and no 'unsafe-eval'; inline event handlers are allowed only by sha256 hash (script-src-attr 'unsafe-hashes') for the 22 fixed handler strings of the minipaint dialogs, so an onerror or other handler produced by HTML parsing is inert whatever jQuery does (CVE-2020-11022 and CVE-2020-11023). AdminSecurityListener no longer replaces an existing policy. Browser evidence (Chrome 157, Firefox 159, real minipaint bundle, EXIF value shown in Image > Information): without the policy the 11022 payload and an option/select payload with an inline onerror execute; with the policy neither executes, with and without the jQuery patch. The full menu (94 entries) and all 21 tools open without a policy violation; slider and change handlers, translations, blob worker, save to the parent frame work. Run bin/console cache:clear afterwards.
+Summary: The image editor response (AssetController::imageEditorAction, imageEditor.html.twig) carries its own Content-Security-Policy: script-src 'self' with a per-response nonce for the one inline script, no 'unsafe-inline' and no 'unsafe-eval'; inline event handlers are allowed only by sha256 hash (script-src-attr 'unsafe-hashes') for the 22 fixed handler strings of the minipaint dialogs, so an onerror or other handler produced by HTML parsing is inert whatever jQuery does (CVE-2020-11022 and CVE-2020-11023). AdminSecurityListener skips a response only when its request carries the attribute _pimcore_own_csp = true, which the action sets; any other controller that sends its own policy opts in by setting the same attribute, and responses without it keep the admin policy. Browser evidence (Chrome 157, Firefox 159, real minipaint bundle, EXIF value shown in Image > Information): without the policy the 11022 payload and an option/select payload with an inline onerror execute; with the policy neither executes, with and without the jQuery patch. The full menu (94 entries) and all 21 tools open without a policy violation; slider and change handlers, translations, blob worker, save to the parent frame work. Run bin/console cache:clear afterwards.
 diff --git a/bundles/AdminBundle/Controller/Admin/Asset/AssetController.php b/bundles/AdminBundle/Controller/Admin/Asset/AssetController.php
 --- a/bundles/AdminBundle/Controller/Admin/Asset/AssetController.php
 +++ b/bundles/AdminBundle/Controller/Admin/Asset/AssetController.php
-@@ -1789,10 +1789,42 @@ class AssetController extends ElementControllerBase implements KernelControllerE
+@@ -1789,10 +1789,43 @@ class AssetController extends ElementControllerBase implements KernelControllerE
              throw $this->createAccessDeniedException('Not allowed to preview');
          }
  
 -        return $this->render(
++        $request->attributes->set('_pimcore_own_csp', true);
 +        $nonce = base64_encode(random_bytes(16));
 +        $response = $this->render(
              '@PimcoreAdmin/Admin/Asset/imageEditor.html.twig',
@@ -58,7 +59,7 @@ diff --git a/bundles/AdminBundle/EventListener/AdminSecurityListener.php b/bundl
  
          $response = $event->getResponse();
  
-+        if ($response->headers->has('Content-Security-Policy')) {
++        if (true === $request->attributes->get('_pimcore_own_csp')) {
 +            return;
 +        }
 +
