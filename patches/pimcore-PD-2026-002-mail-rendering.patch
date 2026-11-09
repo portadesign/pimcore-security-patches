@@ -1,7 +1,7 @@
 ID: PD-2026-002 (no public advisory, Portadesign hardening)
 Package: pimcore/pimcore
 Verified: 10.6.9
-Summary: Resent logged mails and the application log summary mail are sent without template rendering; body and subject reach the recipient exactly as logged or built, and the mail log stores the subject that was sent instead of rendering it again. The log summary mail carries an explicit plain-text part. A resend of a log entry with a document id and no stored body is no longer re-rendered from the document. Workflow notification mails built from a template are sent as built, with absolute paths and CSS applied and a plain-text part.
+Summary: Resent logged mails, the application log summary mail and workflow notification mails built from a template are sent without template rendering; body and subject reach the recipient exactly as logged or built, and the mail log stores the subject that was sent instead of rendering it again. The log summary and notification mails carry an explicit plain-text part, the notification mail gets its CSS and absolute paths applied before sending. A resend of a log entry with a document id and no stored body is no longer re-rendered from the document.
 
 diff --git a/bundles/AdminBundle/Controller/Admin/EmailController.php b/bundles/AdminBundle/Controller/Admin/EmailController.php
 index 804d545..45c982e 100644
