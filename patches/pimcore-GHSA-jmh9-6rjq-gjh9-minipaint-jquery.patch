@@ -2,7 +2,7 @@ CVE: CVE-2020-11022, CVE-2020-11023 (jQuery 3.4.1 inside minipaint)
 Advisory: GHSA-jmh9-6rjq-gjh9
 Package: pimcore/pimcore
 Verified: 10.6.9
-Summary: The image editor bundle carries jQuery 3.4.1 as a private webpack module (no window.$). The module wrapper now sets jQuery.htmlPrefilter to an identity function after the factory returns, so HTML is no longer rewritten before parsing (CVE-2020-11022). The option-in-select wrapping behind CVE-2020-11023 is not changed; it does not reproduce in current browsers. Run bin/console assets:install afterwards; bundle.js.map is not regenerated.
+Summary: The image editor bundle carries jQuery 3.4.1 as a private webpack module (no window.$). The module wrapper now sets jQuery.htmlPrefilter to an identity function after the factory returns, so HTML is no longer rewritten before parsing (CVE-2020-11022). The option-in-select wrapping behind CVE-2020-11023 is not changed here (it does not reproduce in current browsers); pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-csp.patch makes any handler it could produce inert. Run bin/console assets:install afterwards; bundle.js.map is not regenerated.
 diff --git a/bundles/AdminBundle/Resources/public/js/lib/minipaint/dist/bundle.js b/bundles/AdminBundle/Resources/public/js/lib/minipaint/dist/bundle.js
 --- a/bundles/AdminBundle/Resources/public/js/lib/minipaint/dist/bundle.js
 +++ b/bundles/AdminBundle/Resources/public/js/lib/minipaint/dist/bundle.js
