@@ -17,6 +17,7 @@ bin/console cache:clear
 Commit `composer.json`, `composer.lock` and `patches.lock.json`. Every `composer install`/`update` verifies the patches and re-applies them when needed. `pimcore/pimcore` must be 10.6.9 (`conflict` rejects older and 10.7+). `conflict` also rejects `phpoffice/phpspreadsheet <1.30.7` and `twig/twig <3.27.0` (GitHub advisories up to 3.26.0); if `composer require` reports one, run `composer update phpoffice/phpspreadsheet twig/twig` first.
 
 - Composer 2.10+ blocks `pimcore/pimcore` because of open advisories: put the `config.policy` part of `audit-ignore.json` into `composer.json` before `composer require`.
+- `league/csv` 9.11.0 and later breaks pristine Pimcore 10.6.9 (compile error: `Pimcore\Helper\CsvFormulaFormatter::unEscapeField()` clashes with `EscapeFormula::unescapeField()`), unrelated to these patches. Keep it at `>=9.7 <9.11`: `composer require 'league/csv:>=9.7 <9.11' -W`.
 
 ### Project on `cweagans/composer-patches` 1.x
 

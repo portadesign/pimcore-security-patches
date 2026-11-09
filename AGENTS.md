@@ -6,7 +6,7 @@ Read this first. It explains why the package exists, how it works, which decisio
 
 This is the Pimcore 10.6 line. Pimcore 10 is end of life: 10.6.9 is the last release (PHP 8.1) while CVEs against it keep being published, and the admin UI lives inside `pimcore/pimcore` (`bundles/AdminBundle`), not in `pimcore/admin-ui-classic-bundle`. Portadesign runs Pimcore 10 projects on the same base image as the 11 ones (`portadev/pimcore-php`, Alpine, ships `git` and `patch`). This package carries Portadesign's own fixes for those CVEs, written from the public advisories and this package's regression tests, and applies them from Composer, so each project needs only `composer require` and gets the same patch set, verification and scanner silencing.
 
-The branch starts as an empty skeleton: `extra.patches`, `advisories.json`, `patches/` and the exploit tests are filled package by package, each ported or written against 10.6.9 (the 11.5 branch is the pattern: `git show 11.5:<path>`).
+The patch list is the table in `README.md` (patch files in `patches/`, apply order in `composer.json` `extra.patches`, each file's header names the ids, advisory, verified version and summary); `advisories.json` holds the status per advisory. A patch was written against 10.6.9 from the advisory and a failing test; the 11.5 branch is only the pattern for the plugin and the test conventions (`git show 11.5:<path>`).
 
 Public GitHub repository, not on Packagist. Installation is documented in `README.md` and must stay at a handful of copy-paste commands.
 
@@ -33,7 +33,9 @@ Every patch is an independent implementation. The inputs were the public advisor
 
 ## Tests
 
-- `tests/*Test.php`: exploit regression tests, one group per CVE; none exist yet on this branch, each package adds its own. They need a host project with a database: a disposable Pimcore 10.6.9 install on PHP 8.1 with PHPUnit 10.5, pristine `vendor/`, no `portadesign/*` package (a Docker Compose project with `app` and `db` services; keep its README next to it with start/stop, the rsync of this repo without `vendor/`, `.git` and `.phpunit.cache` into `var/tmp/security-patches`, and the `patch -p1` apply/revert commands). Run `PIMCORE_PROJECT_ROOT=<app root> vendor/bin/phpunit -c var/tmp/security-patches/phpunit.xml.dist [--group <id>]`, then remove the copy and `.phpunit.cache`.
+- `tests/*Test.php`: exploit regression tests, one group per CVE or internal id (`--group <id>`). They need a host project with a database: a disposable Pimcore 10.6.9 install on PHP 8.1 with PHPUnit 10.5, pristine `vendor/`, no `portadesign/*` package (a Docker Compose project with `app` and `db` services; keep its README next to it with start/stop, the rsync of this repo without `vendor/`, `.git` and `.phpunit.cache` into `var/tmp/security-patches`, and the `patch -p1` apply/revert commands). Run `PIMCORE_PROJECT_ROOT=<app root> vendor/bin/phpunit -c var/tmp/security-patches/phpunit.xml.dist [--group <id>]`, then remove the copy and `.phpunit.cache`. Run the suite unpatched (most tests must fail) and patched (all green, the minipaint node tests skip without `node`).
+- The host needs `league/csv` below 9.11 (`composer require 'league/csv:9.8.0' -W` while testing, restore the lock afterwards): 9.11+ breaks pristine `CsvFormulaFormatter`, see `README.md`.
+- Tests that create assets, documents, versions or admin translations use `tests/Support/HostResidueGuard` (disables versions, removes versions and `messenger_messages` rows created since the test started, drops queued admin translations). A full run must leave the row counts of `versions`, `messenger_messages`, `translations_admin`, `objects`, `assets`, `documents`, `users` and the files under `var/` unchanged; compare counts before and after. Asset objects returned by `Asset::getByPath()` after an out-of-process request can be stale in the runtime cache: reload with `Asset::getById($id, ['force' => true])`.
 - 10.6 differs from 11.5: custom reports live in core (`Pimcore\Model\Tool\CustomReport`, not a bundle), the admin UI is `bundles/AdminBundle` inside `pimcore/pimcore`, PHPUnit stops at 10.5, and the demo has no reports (tests create their own). Clear `var/cache` after every apply or revert; reverting with `patch -R` can leave `*.orig` files (`find vendor/pimcore -name '*.orig' -delete`). Residue after exploit tests: orphan `versions` rows and `pd_sec_*` scratch tables. Running them from the host without a database produces hundreds of errors; that is not a regression.
 - `tests/Unit`: plugin unit tests, `vendor/bin/phpunit -c phpunit.unit.xml.dist`, no host needed; run them on PHP 8.1 too (the host container, `composer install` in a copy).
 - `composer phpstan` must be clean.
@@ -49,11 +51,17 @@ Every patch is an independent implementation. The inputs were the public advisor
 
 ## Open items
 
-1. The patch list, `advisories.json`, VEX, `audit-ignore.json` and the exploit tests are empty; ports and new patches arrive per package. Ported 11.5 tests must not use trait constants or other 8.2+ syntax; `tests/Support/ReportScratchTable.php` exposes the table name as `reportTable()`.
+1. P5 (login, accounts, admin XSS: PDF preview, account mails) is not merged yet. The PDF preview response must set the request attribute `_pimcore_own_csp` (honoured by `AdminSecurityListener` through the image editor CSP patch) so the generic admin CSP does not overwrite its own policy.
 2. `composer.json` conflict range allows unverified enterprise releases of 10.6.9+ below 10.7; the VEX lists only 10.6.9. Verify the others with `verify.sh` or narrow the range.
 3. If cweagans is not active (not allowed, or 1.x) the plugin returns silently; print an error. Matters more here, as Pimcore 10 projects often start on 1.x.
 4. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
 5. `ComposerPlugin` itself has no unit test.
+6. `bundles/AdminBundle/Helper/QueryParams.php:122` concatenates `$f->property` unquoted in its date branch; nothing in 10.6.9 calls `QueryParams::getFilterCondition()`, so it is not patched. Project code calling it stays exposed.
+7. Document-based mails render the document output again through `Mail::renderParams()` by design: a parameter printed by the document template becomes Twig source in the sandbox. The sandbox policy limits the damage; it does not remove the re-rendering.
+8. CVE-2026-45162: deeply nested pricing `Bracket` conditions in a stored rule can exhaust resources when loaded (allowlist does not bound depth); `Serialize::unserializeSubtypes()` autoloads identifier-shaped class names found in the stored data, so any autoloadable class name is loaded (never instantiated unless it extends an allowed base type).
+9. Browser behaviour is verified manually only: the image editor CSP (GHSA-jmh9-6rjq-gjh9) and, once P5 is merged, the PDF preview. The tests assert the response headers. The minipaint jQuery probe (`tests/js`, run by `MinipaintJqueryTest` and `verify.sh`) skips without `node`, so a host or CI without node does not run it.
+10. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php`, the `testControl*` cases by design.
+11. CVE-2026-45260: with `delete` but without `rename`, an overwrite whose destination was already deleted by Sabre and whose delete-log entry is lost ends as a rename of the source onto the destination path (authorised by the `beforeMove` decision). A cross-folder move to a free but different name still lands under the source name (core behaviour).
 
 ## Conventions
 
