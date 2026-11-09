@@ -320,6 +320,59 @@ final class CustomReportsShareTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(['id', 'note'], $this->newsletterFieldNames());
     }
 
+    public function testNewsletterAddressSourceRefusesUnsharedReport(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $thrown = null;
+        $created = null;
+
+        try {
+            $created = $this->addressSourceFactory()->create(['reportId' => $this->reportName, 'emailFieldName' => 'note']);
+        } catch (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e) {
+            $thrown = $e;
+        }
+
+        $this->assertInstanceOf(\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException::class, $thrown, 'Address source was created: ' . get_debug_type($created));
+    }
+
+    public function testControlNewsletterAddressSourceIsCreatedForSharedReport(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::USERNAME]);
+
+        $this->assertInstanceOf(
+            \Pimcore\Document\Newsletter\AddressSourceAdapter\ReportAdapter::class,
+            $this->addressSourceFactory()->create(['reportId' => $this->reportName, 'emailFieldName' => 'note']),
+        );
+    }
+
+    public function testControlNewsletterAddressSourceIsCreatedForAdmin(): void
+    {
+        $this->authenticate($this->createUser('pd-sec-share-admin', [], [], true));
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $this->assertInstanceOf(
+            \Pimcore\Document\Newsletter\AddressSourceAdapter\ReportAdapter::class,
+            $this->addressSourceFactory()->create(['reportId' => $this->reportName, 'emailFieldName' => 'note']),
+        );
+    }
+
+    public function testControlNewsletterAddressSourceIsCreatedWithoutAuthenticatedUser(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+        $this->authenticate(null);
+
+        $this->assertInstanceOf(
+            \Pimcore\Document\Newsletter\AddressSourceAdapter\ReportAdapter::class,
+            $this->addressSourceFactory()->create(['reportId' => $this->reportName, 'emailFieldName' => 'note']),
+        );
+    }
+
+    private function addressSourceFactory(): \Pimcore\Document\Newsletter\ReportAddressSourceAdapterFactory
+    {
+        return new \Pimcore\Document\Newsletter\ReportAddressSourceAdapterFactory(\Pimcore::getContainer()->get('pimcore.custom_report.adapter.factories'));
+    }
+
     /**
      * @return list<string>
      */
