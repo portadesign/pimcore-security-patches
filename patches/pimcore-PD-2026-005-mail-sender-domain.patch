@@ -1,0 +1,18 @@
+ID: PD-2026-005 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: The default sender of a mail without From is built from the configured general.domain; the request host is only the fallback when no domain is configured.
+
+diff --git a/lib/Mail.php b/lib/Mail.php
+index 01a5a78..417c51b 100644
+--- a/lib/Mail.php
++++ b/lib/Mail.php
+@@ -554,7 +554,7 @@ class Mail extends Email
+             }
+         }
+ 
+-        if (empty($this->getFrom()) && $hostname = Tool::getHostname()) {
++        if (empty($this->getFrom()) && $hostname = (\Pimcore\Config::getSystemConfiguration('general')['domain'] ?? null) ?: Tool::getHostname()) {
+             // set default "from" address
+             $this->from('no-reply@' . $hostname);
+         }
