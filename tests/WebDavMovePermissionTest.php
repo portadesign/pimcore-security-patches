@@ -407,6 +407,117 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(self::SOURCE_DATA, $moved?->getData());
     }
 
+    /**
+     * @return array<string, array{\Closure}>
+     */
+    public static function lostDeleteLogEntryProvider(): array
+    {
+        return [
+            'dropped' => [static fn (string $path): array => []],
+            'undecodable' => [static fn (string $path): array => [$path => ['id' => 0, 'timestamp' => time(), 'data' => 'pd-sec-webdav-not-a-serialized-asset']]],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('lostDeleteLogEntryProvider')]
+    public function testAuthorisedOverwriteWithoutRenameSurvivesLostDeleteLogEntry(\Closure $logAfterDeletion): void
+    {
+        $this->grantWorkspace(['view' => true, 'list' => true, 'create' => true, 'publish' => true, 'delete' => true]);
+        $existingPath = '/' . self::FOLDER . '/existing.txt';
+
+        $status = $this->guardedMove(
+            '/' . self::FOLDER . '/source.txt',
+            $existingPath,
+            static function () use ($logAfterDeletion, $existingPath): void {
+                \Pimcore\Model\Asset\WebDAV\Service::saveDeleteLog($logAfterDeletion($existingPath));
+            },
+        );
+
+        $this->assertSame(204, $status);
+        $moved = \Pimcore\Model\Asset::getByPath($existingPath);
+        $this->assertSame($this->source->getId(), $moved?->getId());
+        $this->assertSame(self::SOURCE_DATA, $moved->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($this->existing->getId(), ['force' => true]));
+        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/source.txt'));
+    }
+
+    public function testControlAuthorisedOverwriteWithoutRenameRestoresTheDeletedDestination(): void
+    {
+        $this->grantWorkspace(['view' => true, 'list' => true, 'create' => true, 'publish' => true, 'delete' => true]);
+
+        $status = $this->guardedMove('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/existing.txt', static function (): void {
+        });
+
+        $this->assertSame(204, $status);
+        $existing = \Pimcore\Model\Asset::getById($this->existing->getId(), ['force' => true]);
+        $this->assertSame('/' . self::FOLDER . '/existing.txt', $existing?->getRealFullPath());
+        $this->assertSame(self::SOURCE_DATA, $existing->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
+    }
+
+    public function testControlAuthorisationOfOneMoveDoesNotCoverAnotherDestination(): void
+    {
+        $this->grantWorkspace(self::ALL_RIGHTS);
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+        $tree->assertMoveAllowed(self::FOLDER . '/source.txt', self::FOLDER . '/authorised.txt');
+        $this->grantWorkspace(['view' => true]);
+
+        $thrown = null;
+        try {
+            $tree->move(self::FOLDER . '/source.txt', self::FOLDER . '/other.txt');
+        } catch (\Sabre\DAV\Exception\Forbidden $e) {
+            $thrown = $e;
+        }
+
+        $this->assertInstanceOf(\Sabre\DAV\Exception\Forbidden::class, $thrown);
+        $this->assertFixturesUnchanged();
+    }
+
+    public function testCrossFolderMoveOntoExistingDestinationOfAnotherNameIsConflictAndNothingIsDeleted(): void
+    {
+        $other = $this->createSubfolderAsset('other.txt', 'pd-sec-webdav-other-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/other.txt');
+
+        $this->assertSame(409, $result['status'], $result['body']);
+        $this->assertFixturesUnchanged();
+        $this->assertSame('pd-sec-webdav-other-data', \Pimcore\Model\Asset::getById($other->getId(), ['force' => true])?->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/source.txt'));
+    }
+
+    public function testCrossFolderMoveOntoExistingFolderOfAnotherNameIsConflictAndFolderSurvives(): void
+    {
+        $folder = $this->createAssetFolder(parentId: $this->subfolder->getId(), filename: 'other');
+        $child = \Pimcore\Model\Asset::create($folder->getId(), ['filename' => 'child.txt', 'data' => 'pd-sec-webdav-child-data']);
+        $this->grantWorkspace(self::ALL_RIGHTS);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/other');
+
+        $this->assertSame(409, $result['status'], $result['body']);
+        $this->assertFixturesUnchanged();
+        $this->assertInstanceOf(\Pimcore\Model\Asset\Folder::class, \Pimcore\Model\Asset::getById($folder->getId(), ['force' => true]));
+        $this->assertSame('/' . self::FOLDER . '/sub/other/child.txt', \Pimcore\Model\Asset::getById($child->getId(), ['force' => true])?->getRealFullPath());
+        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/source.txt'));
+    }
+
+    public function testTreeMoveToExistingDestinationOfAnotherNameAcrossFoldersIsConflict(): void
+    {
+        $other = $this->createSubfolderAsset('other.txt', 'pd-sec-webdav-other-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+
+        $thrown = null;
+        try {
+            $tree->move(self::FOLDER . '/source.txt', self::FOLDER . '/sub/other.txt');
+        } catch (\Sabre\DAV\Exception\Conflict $e) {
+            $thrown = $e;
+        }
+
+        $this->assertInstanceOf(\Sabre\DAV\Exception\Conflict::class, $thrown);
+        $this->assertSourceUnchanged();
+        $this->assertSame('pd-sec-webdav-other-data', \Pimcore\Model\Asset::getById($other->getId(), ['force' => true])?->getData());
+    }
+
     public function testViewOnlyUserCannotRenameThroughWebdavAction(): void
     {
         $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/renamed.txt');
@@ -457,6 +568,34 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
             }
 
             self::fail($method . ' threw ' . get_class($e) . ': ' . $e->getMessage());
+        }
+
+        return $response->getStatus();
+    }
+
+    private function guardedMove(string $path, string $destinationPath, \Closure $afterDestinationDeleted): int
+    {
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+        $server = new \Sabre\DAV\Server($tree);
+        $server->setBaseUri(self::BASE_URI);
+        $server->addPlugin(new \Pimcore\Model\Asset\WebDAV\MoveGuardPlugin());
+        $server->on('afterUnbind', static function (string $unbound) use ($afterDestinationDeleted, $destinationPath): void {
+            if ('/' . ltrim($unbound, '/') === $destinationPath) {
+                $afterDestinationDeleted();
+            }
+        });
+
+        $request = new \Sabre\HTTP\Request('MOVE', self::BASE_URI . ltrim($path, '/'), [
+            'Destination' => self::BASE_URI . ltrim($destinationPath, '/'),
+            'Overwrite' => 'T',
+        ]);
+        $request->setBaseUrl(self::BASE_URI);
+        $response = new \Sabre\HTTP\Response();
+
+        try {
+            $server->invokeMethod($request, $response, false);
+        } catch (\Sabre\DAV\Exception $e) {
+            return $e->getHTTPCode();
         }
 
         return $response->getStatus();

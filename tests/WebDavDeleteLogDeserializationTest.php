@@ -31,6 +31,11 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
 
     private \Pimcore\Model\Asset $source;
 
+    /**
+     * @var array{0: array<int, mixed>, 1: array<string, int>}|null
+     */
+    private ?array $originalFactoryState = null;
+
     protected function setUp(): void
     {
         $this->removeFixtures();
@@ -56,6 +61,7 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
     protected function tearDown(): void
     {
         $this->authenticate(null);
+        $this->restoreAssetClassOverride();
         $this->rollBackOpenTransactions();
         $this->removeFixtures();
     }
@@ -96,6 +102,41 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
         $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
     }
 
+    public function testDeleteLoggedAssetOfOverriddenClassIsRestored(): void
+    {
+        $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
+        $ghost = \Pimcore\Model\Asset::create($this->folder->getId(), ['filename' => 'ghost.txt', 'data' => self::GHOST_DATA]);
+        $this->assertInstanceOf(\Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class, $ghost);
+        $this->authenticate($this->admin);
+        $this->assertSame(204, $this->request('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $this->assertArrayHasKey('/' . self::FOLDER . '/ghost.txt', \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
+        $this->authenticate($this->user);
+
+        $status = $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt');
+
+        $this->assertSame(201, $status);
+        $restored = \Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class, $restored);
+        $this->assertSame('/' . self::FOLDER . '/ghost.txt', $restored->getRealFullPath());
+        $this->assertSame(self::SOURCE_DATA, $restored->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
+    }
+
+    public function testDeleteLogEntryOfAnOverrideThatIsNoLongerConfiguredIsDropped(): void
+    {
+        $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
+        $ghost = \Pimcore\Model\Asset::create($this->folder->getId(), ['filename' => 'ghost.txt', 'data' => self::GHOST_DATA]);
+        $this->authenticate($this->admin);
+        $this->assertSame(204, $this->request('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $this->restoreAssetClassOverride();
+        $this->authenticate($this->user);
+
+        $this->assertArrayNotHasKey('/' . self::FOLDER . '/ghost.txt', \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
+        $this->assertSame(201, $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt'));
+        $this->assertNull(\Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]));
+        $this->assertSame($this->source->getId(), \Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/ghost.txt')?->getId());
+    }
+
     private function move(string $sourcePath, string $destinationPath): int
     {
         return $this->request('MOVE', $sourcePath, $destinationPath);
@@ -124,6 +165,29 @@ final class WebDavDeleteLogDeserializationTest extends \PHPUnit\Framework\TestCa
         }
 
         return $response->getStatus();
+    }
+
+    private function overrideAssetClass(string $source, string $target): void
+    {
+        $factory = \Pimcore::getContainer()->get('pimcore.model.factory');
+        $loaders = new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaders');
+        $cache = new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaderCache');
+        $this->originalFactoryState ??= [$loaders->getValue($factory), $cache->getValue($factory)];
+
+        $factory->addLoader(new \Pimcore\Loader\ImplementationLoader\ClassMapLoader([$source => $target]));
+        $cache->setValue($factory, []);
+    }
+
+    private function restoreAssetClassOverride(): void
+    {
+        if (null === $this->originalFactoryState) {
+            return;
+        }
+
+        $factory = \Pimcore::getContainer()->get('pimcore.model.factory');
+        (new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaders'))->setValue($factory, $this->originalFactoryState[0]);
+        (new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaderCache'))->setValue($factory, $this->originalFactoryState[1]);
+        $this->originalFactoryState = null;
     }
 
     private function createUser(string $name, bool $admin): \Pimcore\Model\User

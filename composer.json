@@ -143,7 +143,7 @@
                 {
                     "description": "CVE-2026-45260, CVE-2026-45162: WebDAV MOVE missing authorization, delete-log unserialize allowlist",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
-                    "sha256": "01312520fa40cf2ec535bcc05e648892ee21efdc350c3529c05b603bfeb0bc5a"
+                    "sha256": "c093d1636d331af95d189c30cfa3337d211cfcf35557751ba388239190a2d08d"
                 },
                 {
                     "description": "CVE-2026-45703: word and xliff export, export jobs skip or reject elements without view permission",
