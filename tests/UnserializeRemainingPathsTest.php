@@ -115,6 +115,39 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
     }
 
+    public function testControlWebDavFileDeleteLogsImageWithPropertiesAndMetadata(): void
+    {
+        $this->prepareFolder();
+        $image = \Pimcore\Model\Asset::create($this->folderId(), [
+            'filename' => 'logged.png',
+            'data' => (string) base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='),
+        ]);
+        $image->setProperty('pd-sec-text', 'text', 'value');
+        $image->setProperty('pd-sec-date', 'date', \Carbon\Carbon::parse('2024-01-03'));
+        $image->addMetadata('title', 'input', 'pd-sec-title');
+        $image->save();
+        $imageId = $image->getId();
+        $admin = $this->createAdmin();
+        $this->tokenStorage()->setToken(new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken(
+            new \Pimcore\Security\User\User($admin),
+            'pimcore_admin',
+            ['ROLE_PIMCORE_USER'],
+        ));
+        $this->cleanups[] = static function () use ($imageId): void {
+            $versions = new \Pimcore\Model\Version\Listing();
+            $versions->setCondition('ctype = ? AND cid = ?', ['asset', $imageId]);
+            foreach ($versions->load() as $version) {
+                $version->delete();
+            }
+        };
+
+        (new \Pimcore\Model\Asset\WebDAV\File($image))->delete();
+        $log = \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog();
+
+        $this->assertSame(['/' . self::FOLDER . '/logged.png'], array_keys($log));
+        $this->assertSame($imageId, $log['/' . self::FOLDER . '/logged.png']['id']);
+    }
+
     public function testTableColumnDataRejectsTopLevelForeignClass(): void
     {
         $result = $this->tableField()->getDataFromResource($this->serialized(fn (): mixed => $this->canary()));

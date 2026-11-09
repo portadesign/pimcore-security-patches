@@ -461,6 +461,51 @@ final class UnserializeHardeningTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Tool\TmpStore::get($id));
     }
 
+    public function testSubtypesInstantiatesSubclassOfBaseTypeButNotUnrelatedClass(): void
+    {
+        $payload = serialize([
+            'project' => new \Portadesign\PimcoreSecurityPatches\Tests\Support\P2ProjectMockup(1, [], []),
+            'foreign' => $this->canary(),
+        ]);
+        $this->resetCanary();
+
+        $result = \Pimcore\Tool\Serialize::unserializeSubtypes($payload, [\Pimcore\Bundle\EcommerceFrameworkBundle\Model\DefaultMockup::class]);
+
+        $this->assertInstanceOf(\Portadesign\PimcoreSecurityPatches\Tests\Support\P2ProjectMockup::class, $result['project']);
+        $this->assertInstanceOf(\__PHP_Incomplete_Class::class, $result['foreign']);
+        $this->assertSame(0, $this->canaryExecutions(), 'Magic methods of a foreign class ran in unserializeSubtypes().');
+    }
+
+    public function testSubtypesAcceptsExtraClassesBesideBaseTypes(): void
+    {
+        $payload = serialize([new \DateTime('2024-01-01'), new \stdClass()]);
+
+        $result = \Pimcore\Tool\Serialize::unserializeSubtypes($payload, [\Pimcore\Bundle\EcommerceFrameworkBundle\Model\DefaultMockup::class], [\DateTime::class]);
+
+        $this->assertInstanceOf(\DateTime::class, $result[0]);
+        $this->assertInstanceOf(\__PHP_Incomplete_Class::class, $result[1]);
+    }
+
+    public function testSubtypesNeverTriggersAutoloadForClassNamesWithOddCharacters(): void
+    {
+        $requested = [];
+        $recorder = static function (string $class) use (&$requested): void {
+            $requested[] = $class;
+        };
+        $odd = '9PdSecOdd\\Class';
+        $payload = 'a:1:{i:0;O:' . strlen($odd) . ':"' . $odd . '":0:{}}';
+
+        spl_autoload_register($recorder, true, true);
+        try {
+            $result = \Pimcore\Tool\Serialize::unserializeSubtypes($payload, [\Pimcore\Bundle\EcommerceFrameworkBundle\Model\DefaultMockup::class]);
+        } finally {
+            spl_autoload_unregister($recorder);
+        }
+
+        $this->assertSame([], array_values(array_filter($requested, static fn (string $class): bool => str_contains($class, '9PdSecOdd'))));
+        $this->assertInstanceOf(\__PHP_Incomplete_Class::class, $result[0]);
+    }
+
     private function hotspotField(): \Pimcore\Model\DataObject\ClassDefinition\Data\Hotspotimage
     {
         $field = new \Pimcore\Model\DataObject\ClassDefinition\Data\Hotspotimage();
