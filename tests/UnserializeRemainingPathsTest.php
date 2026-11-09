@@ -29,6 +29,11 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
     private ?string $originalDeleteLog = null;
 
     /**
+     * @var array{0: array<int, mixed>, 1: array<string, int>}|null
+     */
+    private ?array $originalFactoryState = null;
+
+    /**
      * @var list<int>
      */
     private array $sessionAssets = [];
@@ -49,6 +54,7 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
     protected function tearDown(): void
     {
         $this->authenticate(null);
+        $this->restoreAssetClassOverride();
         $this->restoreDeleteLog();
         $this->restoreDashboard();
         $this->deleteErrorLogRow();
@@ -134,6 +140,51 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Pimcore\Model\Asset::class, $restored);
         $this->assertSame('/' . self::FOLDER . '/ghost.txt', $restored->getRealFullPath());
         $this->assertSame(self::SOURCE_DATA, $restored->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
+    }
+
+    public function testDeleteThenMoveRestoresDeletedAssetOfOverriddenClass(): void
+    {
+        $this->prepareFolder();
+        $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
+        $source = $this->createTextAsset('source.txt', self::SOURCE_DATA);
+        $ghost = $this->createTextAsset('ghost.txt', self::GHOST_DATA);
+        $this->assertInstanceOf(\Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class, $ghost);
+        $this->authenticate($this->createAdmin());
+
+        $this->assertSame(204, $this->request('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $this->assertNull(\Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]));
+        $this->assertArrayHasKey('/' . self::FOLDER . '/ghost.txt', \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
+
+        $this->assertSame(201, $this->request('MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt'));
+
+        $restored = \Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class, $restored);
+        $this->assertSame('/' . self::FOLDER . '/ghost.txt', $restored->getRealFullPath());
+        $this->assertSame(self::SOURCE_DATA, $restored->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
+    }
+
+    public function testControlDeleteThenMoveRestoresAssetWithPropertiesAndDependencies(): void
+    {
+        $this->prepareFolder();
+        $source = $this->createTextAsset('source.txt', self::SOURCE_DATA);
+        $ghost = $this->createTextAsset('ghost.txt', self::GHOST_DATA);
+        $ghost->setProperty('pd-sec-reference', 'asset', $this->folder, false, false);
+        $ghost->setProperty('pd-sec-date', 'date', \Carbon\Carbon::parse('2024-01-02 03:04:05'), false, false);
+        $ghost->save();
+        $this->authenticate($this->createAdmin());
+
+        $this->assertSame(204, $this->request('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $logged = \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog();
+        $this->assertArrayHasKey('/' . self::FOLDER . '/ghost.txt', $logged);
+
+        $this->assertSame(201, $this->request('MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt'));
+
+        $restored = \Pimcore\Model\Asset::getById($ghost->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $restored);
+        $this->assertSame(self::SOURCE_DATA, $restored->getData());
+        $this->assertSame($this->folder->getId(), $restored->getProperty('pd-sec-reference')->getId());
         $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
     }
 
@@ -712,6 +763,29 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         } else {
             file_put_contents($logFile, $this->originalDeleteLog);
         }
+    }
+
+    private function overrideAssetClass(string $source, string $target): void
+    {
+        $factory = \Pimcore::getContainer()->get('pimcore.model.factory');
+        $loaders = new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaders');
+        $cache = new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaderCache');
+        $this->originalFactoryState = [$loaders->getValue($factory), $cache->getValue($factory)];
+
+        $factory->addLoader(new \Pimcore\Loader\ImplementationLoader\ClassMapLoader([$source => $target]));
+        $cache->setValue($factory, []);
+    }
+
+    private function restoreAssetClassOverride(): void
+    {
+        if (null === $this->originalFactoryState) {
+            return;
+        }
+
+        $factory = \Pimcore::getContainer()->get('pimcore.model.factory');
+        (new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaders'))->setValue($factory, $this->originalFactoryState[0]);
+        (new \ReflectionProperty(\Pimcore\Loader\ImplementationLoader\ImplementationLoader::class, 'loaderCache'))->setValue($factory, $this->originalFactoryState[1]);
+        $this->originalFactoryState = null;
     }
 
     private function prepareFolder(): void

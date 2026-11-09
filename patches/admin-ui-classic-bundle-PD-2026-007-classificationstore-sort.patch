@@ -1,0 +1,48 @@
+ID: PD-2026-007 (no public advisory, Portadesign hardening)
+Package: pimcore/admin-ui-classic-bundle
+Verified: 1.7.6, 1.7.16
+Summary: The object grid builds the classification store join alias (cskey_<field>_<group>_<key>) from the sort property and emits it unquoted in the select list and the join. The field name is now accepted only when it names a classification store field of the class and the group and key ids only when they are integers; the alias is built from those validated parts, anything else raises InvalidArgumentException before a query is built.
+
+diff --git a/src/Helper/GridHelperService.php b/src/Helper/GridHelperService.php
+index d012ebf..e82039b 100644
+--- a/src/Helper/GridHelperService.php
++++ b/src/Helper/GridHelperService.php
+@@ -458,3 +458,3 @@ class GridHelperService
+                     $fieldname = $featureJoin['fieldname'];
+-                    $mappedKey = 'cskey_' . $fieldname . '_' . $featureJoin['groupId'] . '_' . $featureJoin['keyId'];
++                    $mappedKey = $this->getFeatureAlias($class, $fieldname, $featureJoin['groupId'], $featureJoin['keyId']);
+                     if (isset($alreadyJoined[$mappedKey])) {
+@@ -478,4 +478,4 @@ class GridHelperService
+                         . ' and ' . $mappedKey . '.fieldname = ' . $db->quote($fieldname)
+-                        . ' and ' . $mappedKey . '.groupId=' . $featureJoin['groupId']
+-                        . ' and ' . $mappedKey . '.keyId=' . $featureJoin['keyId']
++                        . ' and ' . $mappedKey . '.groupId=' . (int) $featureJoin['groupId']
++                        . ' and ' . $mappedKey . '.keyId=' . (int) $featureJoin['keyId']
+                         . ' and ' . $mappedKey . '.language = ' . $db->quote($featureJoin['language'])
+@@ -495,2 +495,14 @@ class GridHelperService
+ 
++    private function getFeatureAlias(ClassDefinition $class, mixed $fieldname, mixed $groupId, mixed $keyId): string
++    {
++        $groupId = filter_var($groupId, FILTER_VALIDATE_INT);
++        $keyId = filter_var($keyId, FILTER_VALIDATE_INT);
++
++        if (!is_string($fieldname) || !$class->getFieldDefinition($fieldname) instanceof DataObject\ClassDefinition\Data\Classificationstore || false === $groupId || false === $keyId) {
++            throw new \InvalidArgumentException('Invalid classification store column.');
++        }
++
++        return 'cskey_' . $fieldname . '_' . $groupId . '_' . $keyId;
++    }
++
+     /**
+@@ -702,3 +714,4 @@ class GridHelperService
+         if (isset($sortingSettings['isFeature']) && $sortingSettings['isFeature']) {
+-            $orderKey = 'cskey_' . $sortingSettings['fieldname'] . '_' . $sortingSettings['groupId'] . '_' . $sortingSettings['keyId'];
++            $fieldname = $sortingSettings['fieldname'];
++            $orderKey = $this->getFeatureAlias($class, $fieldname, $sortingSettings['groupId'], $sortingSettings['keyId']);
+             $list->setOrderKey($orderKey);
+@@ -706,5 +719,2 @@ class GridHelperService
+ 
+-            $parts = explode('_', $orderKey);
+-
+-            $fieldname = $parts[1];
+             /** @var DataObject\ClassDefinition\Data\Classificationstore $csFieldDefinition */

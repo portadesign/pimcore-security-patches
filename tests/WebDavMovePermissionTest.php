@@ -112,15 +112,14 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $this->assertFixturesUnchanged();
     }
 
-    public function testUserWithoutPublishCannotOverwriteExistingAssetAndDestinationStaysDeleted(): void
+    public function testUserWithoutPublishCannotOverwriteExistingAssetAndDestinationSurvives(): void
     {
         $this->grantWorkspace(['view' => true, 'list' => true, 'delete' => true]);
 
         $status = $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/existing.txt');
 
         $this->assertSame(403, $status);
-        $this->assertSourceUnchanged();
-        $this->assertDestinationDeleted();
+        $this->assertFixturesUnchanged();
     }
 
     public function testViewOnlyUserCannotResurrectDeleteLoggedPath(): void
@@ -148,7 +147,7 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/ghost.txt'));
     }
 
-    public function testUserWithoutDeleteOnSourceCannotOverwriteExistingAssetAndDestinationStaysDeleted(): void
+    public function testUserWithoutDeleteOnSourceCannotOverwriteExistingAssetAndDestinationSurvives(): void
     {
         $this->grant([
             $this->workspace($this->folder, self::ALL_RIGHTS),
@@ -158,8 +157,7 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $status = $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/existing.txt');
 
         $this->assertSame(403, $status);
-        $this->assertSourceUnchanged();
-        $this->assertDestinationDeleted();
+        $this->assertFixturesUnchanged();
     }
 
     public function testFailingSaveOfAuthorisedMoveIsNotReportedAsSuccess(): void
@@ -334,23 +332,99 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
     }
 
+    public function testControllerRegistersMoveGuardPlugin(): void
+    {
+        $server = $this->createServer();
+
+        $this->assertInstanceOf(\Pimcore\Model\Asset\WebDAV\MoveGuardPlugin::class, $server->getPlugin('pimcore-asset-move-guard'));
+    }
+
+    public function testControlRefusedOverwriteOfDeleteLoggedPathLeavesNoTrace(): void
+    {
+        $ghostId = $this->deleteGhostAsAdmin();
+        $this->grantWorkspace(['view' => true, 'list' => true, 'rename' => true, 'publish' => true, 'create' => true]);
+
+        $this->assertSame(403, $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/ghost.txt'));
+
+        $this->assertSourceUnchanged();
+        $this->assertNull(\Pimcore\Model\Asset::getById($ghostId, ['force' => true]));
+        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/ghost.txt'));
+    }
+
+    public function testExistingDestinationFolderSurvivesMoveWithoutRenameRight(): void
+    {
+        $this->grantWorkspace(['view' => true, 'list' => true, 'create' => true, 'publish' => true, 'delete' => true]);
+        $child = \Pimcore\Model\Asset::create($this->subfolder->getId(), ['filename' => 'child.txt', 'data' => 'pd-sec-webdav-child']);
+
+        $status = $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub');
+
+        $this->assertSame(403, $status);
+        $this->assertSourceUnchanged();
+        $this->assertInstanceOf(\Pimcore\Model\Asset\Folder::class, \Pimcore\Model\Asset::getById($this->subfolder->getId(), ['force' => true]));
+        $survivingChild = \Pimcore\Model\Asset::getById($child->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $survivingChild);
+        $this->assertSame('/' . self::FOLDER . '/sub/child.txt', $survivingChild->getRealFullPath());
+    }
+
+    public function testCrossFolderMoveToTakenPathIsRefusedBeforeDestinationIsDeleted(): void
+    {
+        $this->grantWorkspace(self::ALL_RIGHTS);
+        $occupant = \Pimcore\Model\Asset::create($this->subfolder->getId(), ['filename' => 'source.txt', 'data' => 'pd-sec-webdav-occupant']);
+        $destination = \Pimcore\Model\Asset::create($this->subfolder->getId(), ['filename' => 'other.txt', 'data' => 'pd-sec-webdav-destination']);
+
+        $status = $this->request('MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/other.txt', unexpectedAsServerError: true);
+
+        $this->assertSame(409, $status);
+        $this->assertSourceUnchanged();
+        $survivingDestination = \Pimcore\Model\Asset::getById($destination->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $survivingDestination, 'Destination asset was deleted.');
+        $this->assertSame('pd-sec-webdav-destination', $survivingDestination->getData());
+        $survivingOccupant = \Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true]);
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $survivingOccupant);
+        $this->assertSame('pd-sec-webdav-occupant', $survivingOccupant->getData());
+    }
+
+    public function testControlCrossFolderOverwriteOfSameNamedAssetStillWorks(): void
+    {
+        $this->grantWorkspace(self::ALL_RIGHTS);
+        $occupant = \Pimcore\Model\Asset::create($this->subfolder->getId(), ['filename' => 'source.txt', 'data' => 'pd-sec-webdav-occupant']);
+
+        $status = $this->move('/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/source.txt');
+
+        $this->assertSame(204, $status);
+        $moved = \Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/source.txt');
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, $moved);
+        $this->assertSame($this->source->getId(), $moved->getId());
+        $this->assertSame(self::SOURCE_DATA, $moved->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true]));
+    }
+
     private function move(string $sourcePath, string $destinationPath): int
     {
         return $this->request('MOVE', $sourcePath, $destinationPath);
     }
 
+    private function createServer(): \Sabre\DAV\Server
+    {
+        $controller = new \Pimcore\Bundle\CoreBundle\Controller\WebDavController();
+        $controller->setContainer(\Pimcore::getContainer());
+        $server = (new \ReflectionMethod($controller, 'createServer'))->invoke($controller);
+        \assert($server instanceof \Sabre\DAV\Server);
+
+        return $server;
+    }
+
     private function request(string $method, string $path, ?string $destinationPath = null, bool $unexpectedAsServerError = false): int
     {
-        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
-        $server = new \Sabre\DAV\Server($tree);
-        $server->setBaseUri(self::BASE_URI);
+        $server = method_exists(\Pimcore\Bundle\CoreBundle\Controller\WebDavController::class, 'createServer') ? $this->createServer() : $this->createPlainServer();
 
+        $baseUri = $server->getBaseUri();
         $headers = null === $destinationPath ? [] : [
-            'Destination' => self::BASE_URI . ltrim($destinationPath, '/'),
+            'Destination' => $baseUri . ltrim($destinationPath, '/'),
             'Overwrite' => 'T',
         ];
-        $request = new \Sabre\HTTP\Request($method, self::BASE_URI . ltrim($path, '/'), $headers);
-        $request->setBaseUrl(self::BASE_URI);
+        $request = new \Sabre\HTTP\Request($method, $baseUri . ltrim($path, '/'), $headers);
+        $request->setBaseUrl($baseUri);
         $response = new \Sabre\HTTP\Response();
 
         try {
@@ -366,6 +440,15 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         }
 
         return $response->getStatus();
+    }
+
+    private function createPlainServer(): \Sabre\DAV\Server
+    {
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+        $server = new \Sabre\DAV\Server($tree);
+        $server->setBaseUri(self::BASE_URI);
+
+        return $server;
     }
 
     private function deleteGhostAsAdmin(): int
@@ -387,12 +470,6 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $existing = \Pimcore\Model\Asset::getById($this->existing->getId(), ['force' => true]);
         $this->assertInstanceOf(\Pimcore\Model\Asset::class, $existing, 'Existing asset was deleted.');
         $this->assertSame(self::EXISTING_DATA, $existing->getData());
-    }
-
-    private function assertDestinationDeleted(): void
-    {
-        $this->assertNull(\Pimcore\Model\Asset::getById($this->existing->getId(), ['force' => true]));
-        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/existing.txt'));
     }
 
     private function createDeepFolder(): \Pimcore\Model\Asset\Folder

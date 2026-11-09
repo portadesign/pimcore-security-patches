@@ -91,6 +91,14 @@
             "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
         },
         {
+            "cve": "PD-2026-007",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/admin-ui-classic-bundle",
+            "patch": "patches/admin-ui-classic-bundle-PD-2026-007-classificationstore-sort.patch",
+            "reason": "PD-2026-007: no public advisory; classification store column of the object grid sort validated before it becomes an SQL alias, Portadesign hardening, not listed in the VEX"
+        },
+        {
             "cve": "CVE-2026-55072",
             "pksa": "PKSA-fpxc-s2d8-24zv",
             "status": "fixed",

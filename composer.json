@@ -22,7 +22,8 @@
     },
     "conflict": {
         "pimcore/pimcore": "<11.5.4 || >=12.0",
-        "pimcore/admin-ui-classic-bundle": "<1.7.6 || >=2.0"
+        "pimcore/admin-ui-classic-bundle": "<1.7.6 || >=2.0",
+        "twig/twig": "<3.14.1"
     },
     "autoload": {
         "psr-4": {
@@ -62,7 +63,7 @@
                 {
                     "description": "CVE-2026-11407: Twig sandbox bypass and reachable model getters",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-                    "sha256": "3fb1bf6d9c6d93175a6f4b5313d249ce572e675ff028e8a4a4ac8aa3ced94a7d"
+                    "sha256": "03bef488e39cc525fa3005422d3e1d3b259d635f1fa75d0d88553cdf2e966b85"
                 },
                 {
                     "description": "CVE-2026-5394: SQL injection in composite indexes",
@@ -97,7 +98,7 @@
                 {
                     "description": "CVE-2026-45260: WebDAV MOVE missing authorization",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
-                    "sha256": "141ff151221c5a6d194c266ebdcabf3d259ee7339bfbcc3ec0c9021053cfddf7"
+                    "sha256": "2ac605530c0755d508c03694400c31a4176e5bdf4210683ddb7fa80bf22b2778"
                 },
                 {
                     "description": "CVE-2026-45703: WordExport authorization bypass, view permission on exported elements",
@@ -107,7 +108,7 @@
                 {
                     "description": "CVE-2026-45162: unserialize without allowed_classes in the WebDAV delete log, Table, Block, editables and other model readers; HMAC-signed session elements",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45162-unserialize-remaining.patch",
-                    "sha256": "ebc9727a0698008f72da4937a07d4e4096caeea96f91b7158393688bb59407aa"
+                    "sha256": "b88693bcfab2883f906cdc161b18e62add11d40969b1ccb975e5f8085d5cee9d"
                 },
                 {
                     "description": "CVE-2026-45704: CustomReports sharing rules enforced on the detail, data and export endpoints",
@@ -135,6 +136,11 @@
                     "description": "PD-2026-002 (no CVE): send mails built from finished or stored content without template rendering",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-PD-2026-002-mail-rendering.patch",
                     "sha256": "069cd2137e8028051389e3bbc1be884f00fcab182f43604e745457fba9784481"
+                },
+                {
+                    "description": "PD-2026-007 (no CVE): validate the classification store column of the object grid sort before it becomes an SQL alias",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-PD-2026-007-classificationstore-sort.patch",
+                    "sha256": "4963bb1c0701250a750d9b97c7e158fbc3777c4300113deb9598c70318c0bf44"
                 }
             ]
         }

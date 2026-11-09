@@ -49,10 +49,9 @@ Every patch is an independent implementation. The inputs were the public advisor
 3. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
 4. Two data providers in `tests/ClassDefinitionIdentifierTest.php` are empty on a host without classes or reports.
 5. CVE-2026-45703: elements without `view` permission are skipped silently (200, element omitted); no 403.
-6. CVE-2026-45260 known gap kept for compatibility with the tests: Sabre deletes the destination before `Tree::move()` runs, so a failed `publish` check leaves the destination deleted.
-7. `ComposerPlugin` itself has no unit test.
-8. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php` (PHP 8.3 rejects them itself), the assignment-path cases in `tests/CompositeIndexTest.php` and `tests/CompositeIndexLegacyKeyTest.php` load test; `tests/TwigSandboxTest.php` accepts any `substr(): Argument #3` TypeError on 11.5.14.1. Exploit tests leave orphan `versions` rows on the host; run the versions cleanup afterwards.
-9. CustomReports `downloadCsvAction` serves any `report-export-<uniqid>.csv` from the temp dir by name; bind export names to the session (reviewer finding on CVE-2026-45704).
+6. `ComposerPlugin` itself has no unit test.
+7. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php` (PHP 8.3 rejects them itself), the assignment-path cases in `tests/CompositeIndexTest.php` and `tests/CompositeIndexLegacyKeyTest.php` load test; `tests/TwigSandboxTest.php` accepts any `substr(): Argument #3` TypeError on 11.5.14.1. Exploit tests leave orphan `versions` rows on the host; run the versions cleanup afterwards.
+8. CustomReports `downloadCsvAction` serves any `report-export-<uniqid>.csv` from the temp dir by name; bind export names to the session (reviewer finding on CVE-2026-45704).
 
 ## Conventions
 
