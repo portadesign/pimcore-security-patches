@@ -1,0 +1,56 @@
+ID: PD-2026-004 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Requires: pimcore-CVE-2026-45703-wordexport-view-permission.patch, pimcore-CVE-2026-45704-custom-reports-share.patch
+Verified: 10.6.9
+Summary: Word export, XLIFF export and custom report CSV downloads answer a missing export file with a generic 404 that names no filesystem path. The XLIFF export and download ids take the same format check as the word export (400 when invalid).
+
+diff --git a/bundles/AdminBundle/Controller/Admin/TranslationController.php b/bundles/AdminBundle/Controller/Admin/TranslationController.php
+--- a/bundles/AdminBundle/Controller/Admin/TranslationController.php
++++ b/bundles/AdminBundle/Controller/Admin/TranslationController.php
+@@ -862,7 +862,7 @@
+      */
+     public function xliffExportAction(Request $request, ExportServiceInterface $exportService)
+     {
+-        $id = $request->get('id');
++        $id = $this->sanitzeExportId((string)$request->get('id'));
+         $data = $this->decodeJson($request->get('data'));
+         $source = $request->get('source');
+         $target = $request->get('target');
+@@ -890,8 +890,12 @@
+      */
+     public function xliffExportDownloadAction(Request $request, ExporterInterface $translationExporter, ExportServiceInterface $exportService)
+     {
+-        $id = $request->get('id');
++        $id = $this->sanitzeExportId((string)$request->get('id'));
+         $exportFile = $exportService->getTranslationExporter()->getExportFilePath($id);
++
++        if (!is_file($exportFile)) {
++            throw $this->createNotFoundException('Export file does not exist');
++        }
+ 
+         $response = new BinaryFileResponse($exportFile);
+         $response->headers->set('Content-Type', $translationExporter->getContentType());
+@@ -1285,7 +1289,7 @@
+         $exportFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . DIRECTORY_SEPARATOR . $id . '.html';
+ 
+         if ($checkExistence && !file_exists($exportFile)) {
+-            throw $this->createNotFoundException(sprintf('Export file does not exist at path %s', $exportFile));
++            throw $this->createNotFoundException('Export file does not exist');
+         }
+ 
+         return $exportFile;
+diff --git a/bundles/AdminBundle/Controller/Reports/CustomReportController.php b/bundles/AdminBundle/Controller/Reports/CustomReportController.php
+--- a/bundles/AdminBundle/Controller/Reports/CustomReportController.php
++++ b/bundles/AdminBundle/Controller/Reports/CustomReportController.php
+@@ -536,6 +536,11 @@
+         $this->checkPermission('reports');
+         if ($exportFile = $request->get('exportFile')) {
+             $exportFile = $this->getTemporaryFileFromFileName($exportFile);
++
++            if (!is_file($exportFile)) {
++                throw $this->createNotFoundException('Export file does not exist');
++            }
++
+             $response = new BinaryFileResponse($exportFile);
+             $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+             $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'export.csv');
