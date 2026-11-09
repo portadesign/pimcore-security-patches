@@ -11,6 +11,20 @@ ordered_patches() {
     foreach ($extra as $patch) { echo basename($patch["url"]), "\n"; }
   ' "$root" "$1"
 }
+probe_minipaint() {
+  local probe="$root/tests/js/minipaint-jquery-probe.cjs" bundle="$1/bundles/AdminBundle/Resources/public/js/lib/minipaint/dist/bundle.js"
+  [ -f "$probe" ] && [ -f "$bundle" ] || return 0
+  if ! command -v node > /dev/null 2>&1; then
+    echo "SKIP minipaint jQuery probe (node not installed)"
+    return 0
+  fi
+  if node "$probe" "$bundle" --check; then
+    echo "OK   minipaint jQuery probe"
+  else
+    echo "FAIL minipaint jQuery probe"
+    return 1
+  fi
+}
 check() {
   local fail=0 package=$2 names name
   names=$(ordered_patches "$package")
@@ -28,6 +42,7 @@ check() {
   done
   echo "-- sequential apply ($3)"
   (cd "$1" && git init -q && failed=0 && for name in $names; do git apply "$root/patches/$name" || { echo "FAIL sequential $name"; failed=1; }; done; exit $failed) || fail=1
+  probe_minipaint "$1" || fail=1
   return $fail
 }
 fetch pimcore/pimcore "$pimcore_tag" "$work/pimcore"
