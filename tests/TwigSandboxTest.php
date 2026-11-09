@@ -242,6 +242,52 @@ final class TwigSandboxTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('pdf|1|1|1|1|' . \Pimcore::getContainer()->get('router')->generate('pimcore_admin_login'), $rendered);
     }
 
+    public function testContentSecurityPolicyHandlerIsBlocked(): void
+    {
+        $this->expectException(\Twig\Sandbox\SecurityNotAllowedMethodError::class);
+
+        $this->render('{{ pimcore_csp.getNonceHtmlAttribute() }}');
+    }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    #[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
+    public function testMailRenderingDoesNotExposeTheAdminCsrfToken(): void
+    {
+        $twig = $this->engine->getTwigEnvironment();
+        $twig->addGlobal('csrfToken', 'pd-sec-csrf-token');
+
+        try {
+            $mail = new \Pimcore\Mail();
+            $mail->subject('subject-{{ csrfToken }}');
+            $mail->html('<p>{{ csrfToken }}</p>');
+
+            $this->assertSame('subject-', $mail->getSubjectRendered());
+            $body = $mail->getBodyHtmlRendered();
+            $this->assertStringContainsString('<p></p>', $body);
+            $this->assertStringNotContainsString('pd-sec-csrf-token', $body);
+        } finally {
+            $twig->addGlobal('csrfToken', null);
+        }
+    }
+
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    #[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
+    public function testTextLayoutRenderingDoesNotExposeTheAdminCsrfToken(): void
+    {
+        $twig = $this->engine->getTwigEnvironment();
+        $twig->addGlobal('csrfToken', 'pd-sec-csrf-token');
+
+        try {
+            $layout = new \Pimcore\Model\DataObject\ClassDefinition\Layout\Text();
+            $layout->setHtml('<p>{{ csrfToken }}</p>');
+            $layout->enrichLayoutDefinition(null);
+
+            $this->assertSame('<p></p>', $layout->getHtml());
+        } finally {
+            $twig->addGlobal('csrfToken', null);
+        }
+    }
+
     public function testMailSubjectRenderingBlocksPasswordLeak(): void
     {
         $user = new \Pimcore\Model\User();

@@ -23,7 +23,7 @@
     "conflict": {
         "pimcore/pimcore": "<11.5.4 || >=12.0",
         "pimcore/admin-ui-classic-bundle": "<1.7.6 || >=2.0",
-        "twig/twig": "<3.14.1"
+        "twig/twig": "<3.27.0"
     },
     "autoload": {
         "psr-4": {
@@ -63,7 +63,7 @@
                 {
                     "description": "CVE-2026-11407: Twig sandbox bypass and reachable model getters",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-                    "sha256": "03bef488e39cc525fa3005422d3e1d3b259d635f1fa75d0d88553cdf2e966b85"
+                    "sha256": "f086f490989dd05b58828f7685e01c4a6fca4b791a1f9a9f4af238a30a5909ac"
                 },
                 {
                     "description": "CVE-2026-5394: SQL injection in composite indexes",
@@ -98,7 +98,7 @@
                 {
                     "description": "CVE-2026-45260: WebDAV MOVE missing authorization",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
-                    "sha256": "2ac605530c0755d508c03694400c31a4176e5bdf4210683ddb7fa80bf22b2778"
+                    "sha256": "3e9b63ac51fa7ea5b92da118172d18f92c2272d119c2b5ae9a571b0b800d51b1"
                 },
                 {
                     "description": "CVE-2026-45703: WordExport authorization bypass, view permission on exported elements",

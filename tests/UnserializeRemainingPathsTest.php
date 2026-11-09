@@ -143,7 +143,7 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
     }
 
-    public function testDeleteThenMoveRestoresDeletedAssetOfOverriddenClass(): void
+    public function testControlDeleteThenMoveRestoresDeletedAssetOfOverriddenClass(): void
     {
         $this->prepareFolder();
         $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
@@ -163,6 +163,31 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('/' . self::FOLDER . '/ghost.txt', $restored->getRealFullPath());
         $this->assertSame(self::SOURCE_DATA, $restored->getData());
         $this->assertNull(\Pimcore\Model\Asset::getById($source->getId(), ['force' => true]));
+    }
+
+    public function testDeleteLogKeepsEntryOfOverriddenAssetClassAndDropsEntryWithForeignClass(): void
+    {
+        $this->prepareFolder();
+        $this->overrideAssetClass(\Pimcore\Model\Asset\Text::class, \Portadesign\PimcoreSecurityPatches\Tests\Support\OverriddenTextAsset::class);
+        $ghost = $this->createTextAsset('ghost.txt', self::GHOST_DATA);
+        $this->authenticate($this->createAdmin());
+        $this->assertSame(204, $this->request('DELETE', '/' . self::FOLDER . '/ghost.txt'));
+        $this->resetCanary();
+
+        $log = \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog();
+        $log['/' . self::FOLDER . '/foreign.txt'] = ['id' => 1, 'timestamp' => time(), 'data' => serialize($this->canary())];
+        \Pimcore\Model\Asset\WebDAV\Service::saveDeleteLog($log);
+        $this->resetCanary();
+
+        $kept = array_filter(
+            \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog(),
+            static fn (string|int $path): bool => str_starts_with((string) $path, '/' . self::FOLDER . '/'),
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        $this->assertSame(['/' . self::FOLDER . '/ghost.txt'], array_keys($kept));
+        $this->assertSame($ghost->getId(), $kept['/' . self::FOLDER . '/ghost.txt']['id']);
+        $this->assertSame(0, $this->canaryExecutions(), 'Magic methods of a foreign class ran while reading the WebDAV delete log.');
     }
 
     public function testControlDeleteThenMoveRestoresAssetWithPropertiesAndDependencies(): void
