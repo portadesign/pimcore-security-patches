@@ -83,6 +83,14 @@
             "reason": "PD-2026-001: no public advisory; admin session token class allowlist, Portadesign hardening, not listed in the VEX"
         },
         {
+            "cve": "PD-2026-002",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch, patches/admin-ui-classic-bundle-PD-2026-002-mail-rendering.patch",
+            "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
+        },
+        {
             "cve": "CVE-2026-55072",
             "pksa": "PKSA-fpxc-s2d8-24zv",
             "status": "fixed",

@@ -113,6 +113,11 @@
                     "description": "CVE-2026-45704: CustomReports sharing rules enforced on the detail, data and export endpoints",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-45704-custom-reports-share.patch",
                     "sha256": "7e41c7906cd037cbea53d89693f5b1587c61846fd11cd0b8402705cc1157461e"
+                },
+                {
+                    "description": "PD-2026-002 (no CVE): send the application log summary mail without template rendering, log the sent subject",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-PD-2026-002-mail-rendering.patch",
+                    "sha256": "36d9b062599f800df742074fa1880341c2232b8831f83a09c943b8a6196eb1c0"
                 }
             ],
             "pimcore/admin-ui-classic-bundle": [
@@ -125,6 +130,11 @@
                     "description": "CVE-2026-45162: unserialize without allowed_classes in the dashboard config reader",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-CVE-2026-45162-dashboard.patch",
                     "sha256": "2230398e1bfb13acf53a2dc49da1cc95305d4cc6b483b9a0acdf6d5631b67057"
+                },
+                {
+                    "description": "PD-2026-002 (no CVE): send mails built from finished or stored content without template rendering",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-PD-2026-002-mail-rendering.patch",
+                    "sha256": "069cd2137e8028051389e3bbc1be884f00fcab182f43604e745457fba9784481"
                 }
             ]
         }

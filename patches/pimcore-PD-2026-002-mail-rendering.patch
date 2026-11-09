@@ -1,0 +1,31 @@
+ID: PD-2026-002 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 11.5.4, 11.5.14.1
+Summary: The application log summary mail is sent without template rendering, and the mail log stores the subject that was sent instead of rendering it again. The log summary mail is sent HTML-only; send() used to derive the text part from the HTML.
+
+diff --git a/bundles/ApplicationLoggerBundle/src/Maintenance/LogMailMaintenanceTask.php b/bundles/ApplicationLoggerBundle/src/Maintenance/LogMailMaintenanceTask.php
+index 6d3afe2..9da2307 100644
+--- a/bundles/ApplicationLoggerBundle/src/Maintenance/LogMailMaintenanceTask.php
++++ b/bundles/ApplicationLoggerBundle/src/Maintenance/LogMailMaintenanceTask.php
+@@ -101,7 +101,7 @@ class LogMailMaintenanceTask implements TaskInterface
+                         $mail->addTo(new Address($receiver, $receiver));
+                     }
+                     $mail->subject('Error Log '.\Pimcore\Tool::getHostUrl());
+-                    $mail->send();
++                    $mail->sendWithoutRendering();
+                 }
+             }
+         }
+diff --git a/lib/Helper/Mail.php b/lib/Helper/Mail.php
+index ff28d0b..9c8e446 100644
+--- a/lib/Helper/Mail.php
++++ b/lib/Helper/Mail.php
+@@ -158,7 +158,7 @@ CSS;
+         $emailLog->setParams($mail->getParams());
+         $emailLog->setSentDate(time());
+ 
+-        $subject = $mail->getSubjectRendered();
++        $subject = (string) $mail->getSubject();
+         if (str_starts_with($subject, '=?')) {
+             $mbIntEnc = mb_internal_encoding();
+             mb_internal_encoding($mail->getTextCharset());
