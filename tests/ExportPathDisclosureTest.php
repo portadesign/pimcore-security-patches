@@ -31,11 +31,6 @@ final class ExportPathDisclosureTest extends \PHPUnit\Framework\TestCase
      */
     private array $exportFiles = [];
 
-    public static function setUpBeforeClass(): void
-    {
-        require_once __DIR__ . '/Support/P4CsvFormulaFormatterShim.php';
-    }
-
     protected function setUp(): void
     {
         $this->removeFixtures();

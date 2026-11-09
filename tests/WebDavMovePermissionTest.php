@@ -69,6 +69,7 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
     protected function tearDown(): void
     {
         $this->authenticate(null);
+        $this->rollBackOpenTransactions();
         $this->removeFixtures();
     }
 
@@ -333,6 +334,79 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         $this->assertNull(\Pimcore\Model\Asset::getById($this->source->getId(), ['force' => true]));
     }
 
+    public function testUserWithoutRenameCannotOverwriteDestinationFolderAndFolderSurvives(): void
+    {
+        $child = $this->createSubfolderAsset('child.txt', 'pd-sec-webdav-child-data');
+        $this->grantWorkspace(['view' => true, 'list' => true, 'create' => true, 'publish' => true, 'delete' => true]);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub');
+
+        $this->assertSame(403, $result['status'], $result['body']);
+        $this->assertFixturesUnchanged();
+        $this->assertInstanceOf(\Pimcore\Model\Asset\Folder::class, \Pimcore\Model\Asset::getById($this->subfolder->getId(), ['force' => true]));
+        $this->assertSame('/' . self::FOLDER . '/sub/child.txt', \Pimcore\Model\Asset::getById($child->getId(), ['force' => true])?->getRealFullPath());
+    }
+
+    public function testTreeMoveOntoExistingFolderIsConflictAndFolderSurvives(): void
+    {
+        $child = $this->createSubfolderAsset('child.txt', 'pd-sec-webdav-child-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+        $tree = new \Pimcore\Model\Asset\WebDAV\Tree(new \Pimcore\Model\Asset\WebDAV\Folder(\Pimcore\Model\Asset::getById(1)));
+
+        $thrown = null;
+        try {
+            $tree->move(self::FOLDER . '/source.txt', self::FOLDER . '/sub');
+        } catch (\Sabre\DAV\Exception\Conflict $e) {
+            $thrown = $e;
+        }
+
+        $this->assertInstanceOf(\Sabre\DAV\Exception\Conflict::class, $thrown);
+        $this->assertFixturesUnchanged();
+        $this->assertInstanceOf(\Pimcore\Model\Asset\Folder::class, \Pimcore\Model\Asset::getById($this->subfolder->getId(), ['force' => true]));
+        $this->assertInstanceOf(\Pimcore\Model\Asset::class, \Pimcore\Model\Asset::getById($child->getId(), ['force' => true]));
+    }
+
+    public function testCrossFolderMoveIntoTakenPathIsConflictAndNothingIsDeleted(): void
+    {
+        $occupant = $this->createSubfolderAsset('source.txt', 'pd-sec-webdav-occupant-data');
+        $neighbour = $this->createSubfolderAsset('neighbour.txt', 'pd-sec-webdav-neighbour-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/neighbour.txt');
+
+        $this->assertSame(409, $result['status'], $result['body']);
+        $this->assertFixturesUnchanged();
+        $this->assertSame('pd-sec-webdav-occupant-data', \Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true])?->getData());
+        $this->assertSame('pd-sec-webdav-neighbour-data', \Pimcore\Model\Asset::getById($neighbour->getId(), ['force' => true])?->getData());
+    }
+
+    public function testCrossFolderMoveIntoTakenPathWithoutDestinationIsConflict(): void
+    {
+        $occupant = $this->createSubfolderAsset('source.txt', 'pd-sec-webdav-occupant-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/anything.txt');
+
+        $this->assertSame(409, $result['status'], $result['body']);
+        $this->assertFixturesUnchanged();
+        $this->assertSame('pd-sec-webdav-occupant-data', \Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true])?->getData());
+        $this->assertNull(\Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/anything.txt'));
+    }
+
+    public function testControlCrossFolderOverwriteOfSameNamedAssetStillWorks(): void
+    {
+        $occupant = $this->createSubfolderAsset('source.txt', 'pd-sec-webdav-occupant-data');
+        $this->grantWorkspace(self::ALL_RIGHTS);
+
+        $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/sub/source.txt');
+
+        $this->assertSame(204, $result['status'], $result['body']);
+        $this->assertNull(\Pimcore\Model\Asset::getById($occupant->getId(), ['force' => true]));
+        $moved = \Pimcore\Model\Asset::getByPath('/' . self::FOLDER . '/sub/source.txt');
+        $this->assertSame($this->source->getId(), $moved?->getId());
+        $this->assertSame(self::SOURCE_DATA, $moved?->getData());
+    }
+
     public function testViewOnlyUserCannotRenameThroughWebdavAction(): void
     {
         $result = $this->webdavActionRequest($this->user, 'MOVE', '/' . self::FOLDER . '/source.txt', '/' . self::FOLDER . '/renamed.txt');
@@ -466,6 +540,11 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
         }
 
         return $workspace;
+    }
+
+    private function createSubfolderAsset(string $filename, string $data): \Pimcore\Model\Asset
+    {
+        return \Pimcore\Model\Asset::create($this->subfolder->getId(), ['filename' => $filename, 'data' => $data]);
     }
 
     private function createTextAsset(string $filename, string $data): \Pimcore\Model\Asset

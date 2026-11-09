@@ -6,6 +6,15 @@ namespace Portadesign\PimcoreSecurityPatches\Tests\Support;
 
 trait P4WebDavSubprocess
 {
+    protected function rollBackOpenTransactions(): void
+    {
+        $db = \Pimcore\Db::get();
+
+        while ($db->isTransactionActive()) {
+            $db->rollBack();
+        }
+    }
+
     /**
      * @return array{status: int, body: string}
      */

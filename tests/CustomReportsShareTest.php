@@ -44,11 +44,6 @@ final class CustomReportsShareTest extends \PHPUnit\Framework\TestCase
      */
     private array $preexistingExports = [];
 
-    public static function setUpBeforeClass(): void
-    {
-        require_once __DIR__ . '/Support/P4CsvFormulaFormatterShim.php';
-    }
-
     protected function setUp(): void
     {
         $this->preexistingExports = glob(PIMCORE_SYSTEM_TEMP_DIRECTORY . '/*.csv') ?: [];
@@ -270,6 +265,91 @@ final class CustomReportsShareTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame($name, $this->createCsvExport(['exportFile' => $name]));
         $this->assertSame(2, substr_count((string) file_get_contents($this->exportPath($name)), 'plain'));
+    }
+
+    public function testNewsletterReportListOmitsUnsharedReport(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $this->assertNotContains($this->reportName, $this->newsletterReportNames());
+    }
+
+    public function testNewsletterFieldNamesOfUnsharedReportAreNotDisclosed(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $this->assertSame([], $this->newsletterFieldNames());
+    }
+
+    public function testControlNewsletterReportListContainsSharedReport(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::USERNAME]);
+
+        $this->assertContains($this->reportName, $this->newsletterReportNames());
+    }
+
+    public function testControlNewsletterReportListContainsReportSharedWithRole(): void
+    {
+        $this->createReport(shareGlobally: false, roleNames: [self::ROLE]);
+
+        $this->assertContains($this->reportName, $this->newsletterReportNames());
+    }
+
+    public function testControlNewsletterReportListOfReportEditorContainsUnsharedReport(): void
+    {
+        $this->user->setPermissions(['reports', 'reports_config']);
+        $this->user->save();
+        $this->authenticate($this->user);
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $this->assertContains($this->reportName, $this->newsletterReportNames());
+    }
+
+    public function testControlNewsletterReportListOfAdminContainsUnsharedReport(): void
+    {
+        $this->authenticate($this->createUser('pd-sec-share-admin', [], [], true));
+        $this->createReport(shareGlobally: false, userNames: [self::OTHER_USERNAME]);
+
+        $this->assertContains($this->reportName, $this->newsletterReportNames());
+    }
+
+    public function testControlNewsletterFieldNamesOfSharedReportAreListed(): void
+    {
+        $this->createReport(shareGlobally: false, userNames: [self::USERNAME]);
+
+        $this->assertSame(['id', 'note'], $this->newsletterFieldNames());
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function newsletterReportNames(): array
+    {
+        $response = $this->newsletterController()->getAvailableReportsAction(new \Symfony\Component\HttpFoundation\Request(['task' => 'list']));
+
+        return array_column(json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR)['data'], 'id');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function newsletterFieldNames(): array
+    {
+        $response = $this->newsletterController()->getAvailableReportsAction(new \Symfony\Component\HttpFoundation\Request(['task' => 'fieldNames', 'reportId' => $this->reportName]));
+
+        return array_column(json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR)['data'], 'name');
+    }
+
+    private function newsletterController(): \Pimcore\Bundle\AdminBundle\Controller\Admin\Document\NewsletterController
+    {
+        $container = \Pimcore::getContainer();
+
+        $controller = new \Pimcore\Bundle\AdminBundle\Controller\Admin\Document\NewsletterController();
+        $controller->setContainer($container);
+        $controller->setTokenResolver($container->get(\Pimcore\Security\User\TokenStorageUserResolver::class));
+        $controller->setPimcoreSerializer($container->get(\Pimcore\Serializer\Serializer::class));
+
+        return $controller;
     }
 
     private function call(string $action): \Symfony\Component\HttpFoundation\JsonResponse
