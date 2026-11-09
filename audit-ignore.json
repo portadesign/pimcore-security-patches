@@ -1,11 +1,37 @@
 {
     "config": {
         "audit": {
-            "ignore": []
+            "ignore": {
+                "GHSA-2mhj-fhvg-v428": "CVE-2026-55072 fixed by portadesign/pimcore-security-patches",
+                "GHSA-36fc-7wjg-mfvj": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches",
+                "GHSA-9x44-4gxf-8c25": "CVE-2026-55634 fixed by portadesign/pimcore-security-patches",
+                "GHSA-q433-j342-rp9h": "CVE-2026-23493 fixed by portadesign/pimcore-security-patches",
+                "GHSA-r2f4-ff2p-xc64": "CVE-2026-5394 fixed by portadesign/pimcore-security-patches",
+                "GHSA-w23p-wrp7-ch38": "CVE-2026-55220 fixed by portadesign/pimcore-security-patches",
+                "PKSA-6dhb-gq75-qpgr": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches",
+                "PKSA-8x4n-f9v2-4s1d": "CVE-2026-27461 not affected: the dependency filter feature does not exist in pimcore/pimcore 10.6.9",
+                "PKSA-kcqp-44r9-qh72": "GHSA-hq76-662x-7mw4 fixed by portadesign/pimcore-security-patches",
+                "PKSA-v5bg-33q7-q8zj": "CVE-2026-45703 fixed by portadesign/pimcore-security-patches",
+                "PKSA-vd5r-2gyh-m6cc": "CVE-2026-45704 fixed by portadesign/pimcore-security-patches",
+                "PKSA-y4yc-6g1b-qfqz": "CVE-2026-45260 fixed by portadesign/pimcore-security-patches"
+            }
         },
         "policy": {
             "advisories": {
-                "ignore-id": []
+                "ignore-id": {
+                    "GHSA-2mhj-fhvg-v428": "CVE-2026-55072 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-36fc-7wjg-mfvj": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-9x44-4gxf-8c25": "CVE-2026-55634 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-q433-j342-rp9h": "CVE-2026-23493 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-r2f4-ff2p-xc64": "CVE-2026-5394 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-w23p-wrp7-ch38": "CVE-2026-55220 fixed by portadesign/pimcore-security-patches",
+                    "PKSA-6dhb-gq75-qpgr": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches",
+                    "PKSA-8x4n-f9v2-4s1d": "CVE-2026-27461 not affected: the dependency filter feature does not exist in pimcore/pimcore 10.6.9",
+                    "PKSA-kcqp-44r9-qh72": "GHSA-hq76-662x-7mw4 fixed by portadesign/pimcore-security-patches",
+                    "PKSA-v5bg-33q7-q8zj": "CVE-2026-45703 fixed by portadesign/pimcore-security-patches",
+                    "PKSA-vd5r-2gyh-m6cc": "CVE-2026-45704 fixed by portadesign/pimcore-security-patches",
+                    "PKSA-y4yc-6g1b-qfqz": "CVE-2026-45260 fixed by portadesign/pimcore-security-patches"
+                }
             }
         }
     }

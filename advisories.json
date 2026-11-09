@@ -4,5 +4,284 @@
             "10.6.9"
         ]
     },
-    "advisories": []
+    "advisories": [
+        {
+            "cve": "CVE-2026-23492",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-23492-search-brick-join.patch",
+            "reason": "CVE-2026-23492 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched: bundles/AdminBundle/Controller/Searchadmin/SearchController.php brick join."
+        },
+        {
+            "cve": "CVE-2023-47637",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2023-47637-multiselect-filter.patch",
+            "reason": "CVE-2023-47637 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched: Multiselect (and Countrymultiselect) getFilterConditionExt."
+        },
+        {
+            "cve": "CVE-2025-27617",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2025-27617-relation-filter-condition.patch",
+            "reason": "CVE-2025-27617 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched in the shared RelationFilterConditionParser trait used by ManyToOne, ManyToMany, ManyToManyObject, Hotspotimage and Image."
+        },
+        {
+            "cve": "CVE-2026-44741",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-44741-translation-grid.patch",
+            "reason": "CVE-2026-44741 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched in bundles/AdminBundle/Controller/Admin/TranslationController.php getGridFilterCondition; the admin UI is part of pimcore/pimcore on 10.6."
+        },
+        {
+            "cve": "CVE-2026-44739",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-44739-custom-reports-sql.patch",
+            "reason": "CVE-2026-44739 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched: Sql adapter findForbiddenKeyword() in getColumns() and getBaseQuery(). Error-based SELECT exfiltration through report SQL needs reports_config, which already allows arbitrary SELECT; the 11.5 line has the same property."
+        },
+        {
+            "cve": "CVE-2026-55416",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-55416-custom-reports-sql-fragments.patch",
+            "reason": "CVE-2026-55416 fixed by portadesign/pimcore-security-patches",
+            "notes": "Patched: Sql adapter fragment scanner, identifier checks, quoted field list and integer LIMIT."
+        },
+        {
+            "cve": "PD-2026-003",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-003-select-filter.patch",
+            "reason": "PD-2026-003: no public advisory; Select, Country, Language, User and Gender grid filters, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "PD-2026-006",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-006-note-list-filter.patch",
+            "reason": "PD-2026-006: no public advisory; note list date filter, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "PD-2026-007",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-007-classificationstore-grid-sort.patch",
+            "reason": "PD-2026-007: no public advisory; classification store grid sort, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "CVE-2026-55634",
+            "pksa": "GHSA-9x44-4gxf-8c25",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-55634-class-field-name-rce.patch",
+            "reason": "CVE-2026-55634 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-55072",
+            "pksa": "GHSA-2mhj-fhvg-v428",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-55072-class-definition-id-regex.patch",
+            "reason": "CVE-2026-55072 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-5394",
+            "pksa": "GHSA-r2f4-ff2p-xc64",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-5394-composite-index-sqli.patch",
+            "reason": "CVE-2026-5394 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-55220",
+            "pksa": "GHSA-w23p-wrp7-ch38",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-55220-unserialize-hardening.patch",
+            "reason": "CVE-2026-55220 fixed by portadesign/pimcore-security-patches",
+            "notes": "The CustomLayout hunk of the 11.x patch does not apply: layouts are PHP files in 10.6.9."
+        },
+        {
+            "cve": "CVE-2026-45162",
+            "pksa": "GHSA-36fc-7wjg-mfvj",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-45162-unserialize-remaining.patch, patches/pimcore-CVE-2026-55220-unserialize-hardening.patch, patches/pimcore-CVE-2026-23493-http-error-log.patch, patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
+            "reason": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches",
+            "notes": "Fixed only with all four patches: remaining unserialize allowlists and HMAC-signed session elements, the CVE-2026-55220 allowlists, the error log detail view (CVE-2026-23493) and the WebDAV Tree::move() delete-log allowlist (CVE-2026-45260 patch, models/Asset/WebDAV/Tree.php). The CVE-2026-55220 patch must be applied first."
+        },
+        {
+            "cve": "CVE-2026-23493",
+            "pksa": "GHSA-q433-j342-rp9h",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-23493-http-error-log.patch",
+            "reason": "CVE-2026-23493 fixed by portadesign/pimcore-security-patches",
+            "notes": "Rows written before the patch keep their data until: UPDATE http_error_log SET cookies = 'a:0:{}', serverVars = 'a:0:{}';"
+        },
+        {
+            "cve": "CVE-2026-11407",
+            "pksa": "PKSA-6dhb-gq75-qpgr",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
+            "reason": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "PD-2026-002",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch",
+            "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "PD-2026-005",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-005-mail-sender-domain.patch",
+            "reason": "PD-2026-005: no public advisory; mail sender, mail body links and notification deeplink no longer follow the request host when general.domain is set, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "CVE-2026-45260",
+            "pksa": "PKSA-y4yc-6g1b-qfqz",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
+            "reason": "CVE-2026-45260 fixed by portadesign/pimcore-security-patches",
+            "notes": "WebDAV MOVE checks create, publish, delete or rename before any change; checks also run before Sabre deletes an overwritten destination The patch also carries the WebDAV delete-log allowlist hunk of CVE-2026-45162 (Tree::move())."
+        },
+        {
+            "cve": "CVE-2026-45703",
+            "pksa": "PKSA-v5bg-33q7-q8zj",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-45703-wordexport-view-permission.patch",
+            "reason": "CVE-2026-45703 fixed by portadesign/pimcore-security-patches",
+            "notes": "Word and XLIFF export reject elements without view permission; export jobs omit them"
+        },
+        {
+            "cve": "CVE-2026-45704",
+            "pksa": "PKSA-vd5r-2gyh-m6cc",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-45704-custom-reports-share.patch",
+            "reason": "CVE-2026-45704 fixed by portadesign/pimcore-security-patches",
+            "notes": "Detail, data, chart, drill-down, CSV and newsletter report endpoints apply the report sharing rule; CSV files are bound to the user"
+        },
+        {
+            "cve": "CVE-2026-23494",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-23494-staticroutes-list-permission.patch",
+            "reason": "CVE-2026-23494 fixed by portadesign/pimcore-security-patches",
+            "notes": "List branch requires the routes permission"
+        },
+        {
+            "cve": "CVE-2026-23495",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-23495-predefined-properties-list-permission.patch",
+            "reason": "CVE-2026-23495 fixed by portadesign/pimcore-security-patches",
+            "notes": "List branch requires the predefined_properties permission"
+        },
+        {
+            "cve": "CVE-2024-24822",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2024-24822-tags-permissions.patch",
+            "reason": "CVE-2024-24822 fixed by portadesign/pimcore-security-patches",
+            "notes": "Tag actions require tags_configuration or tags_assignment"
+        },
+        {
+            "cve": "CVE-2024-41109",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2024-41109-statistics-permission.patch",
+            "reason": "CVE-2024-41109 fixed by portadesign/pimcore-security-patches",
+            "notes": "Statistics endpoint requires system_settings"
+        },
+        {
+            "cve": "PD-2026-004",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-004-path-disclosure.patch",
+            "reason": "PD-2026-004: no public advisory; filesystem paths in export download error messages, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "GHSA-hq76-662x-7mw4",
+            "pksa": "PKSA-kcqp-44r9-qh72",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "composer.json conflict phpoffice/phpspreadsheet <1.30.7",
+            "reason": "GHSA-hq76-662x-7mw4 fixed by portadesign/pimcore-security-patches",
+            "notes": "Advisory names CVE-2024-45048 (GHSA-ghg6-32f9-2jp7, XXE), fixed in phpoffice/phpspreadsheet 1.29.1; the 2.x target in the advisory is not installable with pimcore/pimcore 10.6.9 (^1.15). The floor 1.30.7 is the first 1.x release without a published 1.x advisory, so it also covers the 28 advisories fixed after 1.29.1 and the two fixed in 1.29.1 itself (CVE-2024-45293, CVE-2024-45046). Run composer update phpoffice/phpspreadsheet once."
+        },
+        {
+            "cve": "GHSA-jmh9-6rjq-gjh9",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-jquery.patch, patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-csp.patch",
+            "reason": "GHSA-jmh9-6rjq-gjh9 fixed by portadesign/pimcore-security-patches",
+            "notes": "jQuery 3.4.1 is a private webpack module of the image editor (bundle.js module 42, no window.$). CVE-2020-11022: jQuery.htmlPrefilter becomes an identity function. CVE-2020-11023 (option wrapped in select) does not reproduce in Chrome 157, Firefox 159 or jsdom and is not changed in jQuery. Both are closed at page level: the image editor response carries a Content-Security-Policy without 'unsafe-inline' and 'unsafe-eval' in script-src, one nonce for the inline config script and sha256 hashes for the 22 fixed inline handler strings of the minipaint dialogs, so an onerror or other handler created by HTML parsing never runs. Untrusted data does reach jQuery HTML parsing (Image > Information puts EXIF values and file name of a file opened via File > Open into a div.trn that the translate plugin re-parses): a 38 character EXIF value and an option/select payload with an inline onerror execute on the unpatched editor in Chrome 157 and Firefox 159 and are inert with the policy, with and without the jQuery patch. The full menu (94 entries) and all 21 tools open without a policy violation. Run bin/console assets:install and bin/console cache:clear after applying; bundle.js.map is not regenerated."
+        },
+        {
+            "cve": "CVE-2026-27461",
+            "pksa": "PKSA-8x4n-f9v2-4s1d",
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "The dependency listing has no filter input and no RLIKE: models/Dependency/Dao.php:184 and :223 take offset and limit only (cast with %d at :196; getRequiredByWithPath builds its ORDER BY from $orderBy and $orderDirection, both whitelisted at :233-239 to id|type|path and ASC|DESC, and its source type and id are validated or cast at :225-231); bundles/AdminBundle/Controller/Admin/ElementController.php:733 and :766 read id, elementType, start and limit; grep RLIKE finds nothing in models, lib or bundles.",
+            "reason": "CVE-2026-27461 not affected: the dependency filter feature does not exist in pimcore/pimcore 10.6.9"
+        },
+        {
+            "cve": "CVE-2024-23646",
+            "pksa": null,
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "Both zip actions quote every selectedId: bundles/AdminBundle/Controller/Admin/Asset/AssetController.php:2101 (downloadAsZipJobsAction, :2078) and :2189 (downloadAsZipAddFilesAction, :2155) use $db->quote(); the parent path is quoted at :2108 and :2196.",
+            "reason": "CVE-2024-23646 not affected: selectedIds are quoted in pimcore/pimcore 10.6.9"
+        },
+        {
+            "cve": "CVE-2023-49075",
+            "pksa": null,
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "PimcoreUserTwoFactorCondition does not exist in 10.6.9 (no match for TwoFactorCondition in the tree); two-factor runs through bundles/AdminBundle/EventListener/TwoFactorListener.php and scheb/2fa-bundle (composer.json:154).",
+            "reason": "CVE-2023-49075 not affected: the vulnerable condition class was introduced in Pimcore 11"
+        },
+        {
+            "cve": "CVE-2023-37280",
+            "pksa": null,
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "The route /admin/login/2fa-setup does not exist in 10.6.9; bundles/AdminBundle/Controller/Admin/LoginController.php:315 (/login/2fa) renders only the message of a session AuthenticationException (:326-330), never a request parameter.",
+            "reason": "CVE-2023-37280 not affected: the vulnerable 2FA setup route does not exist in pimcore/pimcore 10.6.9"
+        }
+    ]
 }
