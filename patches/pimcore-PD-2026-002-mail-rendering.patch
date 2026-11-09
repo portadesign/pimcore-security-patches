@@ -1,7 +1,7 @@
 ID: PD-2026-002 (no public advisory, Portadesign hardening)
 Package: pimcore/pimcore
 Verified: 10.6.9
-Summary: Resent logged mails and the application log summary mail are sent without template rendering; body and subject reach the recipient exactly as logged or built, and the mail log stores the subject that was sent instead of rendering it again. The log summary mail carries an explicit plain-text part. A resend of a log entry with a document id and no stored body is no longer re-rendered from the document.
+Summary: Resent logged mails and the application log summary mail are sent without template rendering; body and subject reach the recipient exactly as logged or built, and the mail log stores the subject that was sent instead of rendering it again. The log summary mail carries an explicit plain-text part. A resend of a log entry with a document id and no stored body is no longer re-rendered from the document. Workflow notification mails built from a template are sent as built, with absolute paths and CSS applied and a plain-text part.
 
 diff --git a/bundles/AdminBundle/Controller/Admin/EmailController.php b/bundles/AdminBundle/Controller/Admin/EmailController.php
 index 804d545..45c982e 100644
@@ -54,3 +54,31 @@ index 28e72cb..ba1c5a0 100644
                  }
              }
          }
+diff --git a/lib/Workflow/Notification/NotificationEmailService.php b/lib/Workflow/Notification/NotificationEmailService.php
+index 24912a1..9faca8a 100644
+--- a/lib/Workflow/Notification/NotificationEmailService.php
++++ b/lib/Workflow/Notification/NotificationEmailService.php
+@@ -177,9 +177,21 @@ class NotificationEmailService extends AbstractNotificationService
+             $this->translator->trans('workflow_change_email_notification_subject', [$subjectType . ' ' . $subject->getFullPath(), $workflow->getName()], 'admin', $language)
+         );
+ 
+-        $mail->html($this->getHtmlBody($subjectType, $subject, $workflow, $action, $language, $mailPath, $deeplink));
++        $html = $this->getHtmlBody($subjectType, $subject, $workflow, $action, $language, $mailPath, $deeplink);
++        $html = \Pimcore\Helper\Mail::embedAndModifyCss($html);
++        $html = \Pimcore\Helper\Mail::setAbsolutePaths($html);
+ 
+-        $mail->send();
++        $mail->html($html);
++
++        try {
++            $converter = new \League\HTMLToMarkdown\HtmlConverter();
++            $converter->getConfig()->merge($mail->getHtml2TextOptions());
++            $mail->text($converter->convert($html));
++        } catch (\Exception $e) {
++            \Pimcore\Logger::warning('Converting HTML to plain text failed, no plain text part will be attached to the notification email');
++        }
++
++        $mail->sendWithoutRendering();
+     }
+ 
+     /**
