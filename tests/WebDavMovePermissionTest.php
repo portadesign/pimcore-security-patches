@@ -411,27 +411,12 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
 
     private function createDeepFolder(): \Pimcore\Model\Asset\Folder
     {
-        return $this->withoutToken(function (): \Pimcore\Model\Asset\Folder {
-            $parent = $this->folder;
-            foreach ([255, 255, 235] as $length) {
-                $parent = $this->createAssetFolder(parentId: $parent->getId(), filename: str_repeat('d', $length));
-            }
-
-            return $parent;
-        });
-    }
-
-    private function withoutToken(callable $callback): mixed
-    {
-        $storage = $this->tokenStorage();
-        $token = $storage->getToken();
-        $storage->setToken(null);
-
-        try {
-            return $callback();
-        } finally {
-            $storage->setToken($token);
+        $parent = $this->folder;
+        foreach ([255, 255, 235] as $length) {
+            $parent = $this->createAssetFolder(parentId: $parent->getId(), filename: str_repeat('d', $length));
         }
+
+        return $parent;
     }
 
     private function reloadedSource(): \Pimcore\Model\Asset
@@ -485,10 +470,10 @@ final class WebDavMovePermissionTest extends \PHPUnit\Framework\TestCase
 
     private function createTextAsset(string $filename, string $data): \Pimcore\Model\Asset
     {
-        return $this->withoutToken(fn (): \Pimcore\Model\Asset => \Pimcore\Model\Asset::create($this->folder->getId(), [
+        return \Pimcore\Model\Asset::create($this->folder->getId(), [
             'filename' => $filename,
             'data' => $data,
-        ]));
+        ]);
     }
 
     private function removeFixtures(): void

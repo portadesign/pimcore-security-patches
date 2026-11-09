@@ -12,10 +12,11 @@ if ('' !== $userId) {
     $user = \Pimcore\Model\User::getById((int) $userId);
     $resolver = $container->get(\Pimcore\Security\User\TokenStorageUserResolver::class);
     $tokenStorage = (new \ReflectionProperty($resolver, 'tokenStorage'))->getValue($resolver);
+    $proxy = new \Pimcore\Security\User\User($user);
     $tokenStorage->setToken(new \Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken(
-        new \Pimcore\Security\User\User($user),
+        $proxy,
         'pimcore_admin',
-        [],
+        $proxy->getRoles(),
     ));
 }
 
