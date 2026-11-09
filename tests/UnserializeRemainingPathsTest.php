@@ -91,6 +91,13 @@ final class UnserializeRemainingPathsTest extends \PHPUnit\Framework\TestCase
         $source = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'source.txt', 'data' => 'pd-sec-source']);
         $ghost = \Pimcore\Model\Asset::create($this->folderId(), ['filename' => 'ghost.txt', 'data' => 'pd-sec-ghost']);
         $this->authenticate($this->createAdmin());
+        $this->cleanups[] = static function () use ($source, $ghost): void {
+            $versions = new \Pimcore\Model\Version\Listing();
+            $versions->setCondition('ctype = ? AND cid IN (?, ?)', ['asset', $source->getId(), $ghost->getId()]);
+            foreach ($versions->load() as $version) {
+                $version->delete();
+            }
+        };
 
         $this->assertSame(204, $this->webDavRequest('DELETE', '/' . self::FOLDER . '/ghost.txt'));
         $this->assertArrayHasKey('/' . self::FOLDER . '/ghost.txt', \Pimcore\Model\Asset\WebDAV\Service::getDeleteLog());
