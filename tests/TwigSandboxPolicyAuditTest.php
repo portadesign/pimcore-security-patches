@@ -437,6 +437,80 @@ final class TwigSandboxPolicyAuditTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('en', $translator->getLocale());
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function deviceDetectorMutatorProvider(): array
+    {
+        return [
+            'device type' => ["{% set changed = pimcore_device().setDeviceType('phone') %}"],
+            'was used' => ['{% set changed = pimcore_device().setWasUsed(true) %}'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('deviceDetectorMutatorProvider')]
+    public function testDeviceDetectorStateCannotBeChangedFromATemplate(string $template): void
+    {
+        $this->resetDeviceDetector();
+        $device = \Pimcore\Tool\DeviceDetector::getInstance();
+
+        try {
+            $this->assertSandboxBlocks($template, \Twig\Sandbox\SecurityNotAllowedMethodError::class);
+            $wasUsed = $device->wasUsed();
+            $this->assertSame([false, 'desktop'], [$wasUsed, $device->getDevice()]);
+        } finally {
+            $this->resetDeviceDetector();
+        }
+    }
+
+    public function testControlDeviceDetectorReadersStillRender(): void
+    {
+        $this->resetDeviceDetector();
+
+        try {
+            $this->assertSame('desktop|yes', $this->renderSandboxed("{{ pimcore_device().getDevice() }}|{{ pimcore_device().isDesktop() ? 'yes' : 'no' }}"));
+        } finally {
+            $this->resetDeviceDetector();
+        }
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function contentSecurityPolicyHandlerProvider(): array
+    {
+        return [
+            'header' => ['{{ pimcore_csp.getCspHeader() }}'],
+            'nonce attribute' => ['{{ pimcore_csp.getNonceHtmlAttribute() }}'],
+            'header option' => ["{% set changed = pimcore_csp.setCspHeader('script-src', '*') %}"],
+            'allowed urls' => ["{% set changed = pimcore_csp.addAllowedUrls('script-src', ['https://evil.example']) %}"],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('contentSecurityPolicyHandlerProvider')]
+    public function testContentSecurityPolicyHandlerIsBlocked(string $template): void
+    {
+        $this->assertSandboxBlocks($template, \Twig\Sandbox\SecurityNotAllowedMethodError::class);
+    }
+
+    public function testContentSecurityPolicyHandlerStaysUntouchedByTemplates(): void
+    {
+        $handler = \Pimcore::getContainer()->get(\Pimcore\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler::class);
+        $header = $handler->getCspHeader();
+
+        try {
+            $this->renderSandboxed("{% set changed = pimcore_csp.setCspHeader('script-src', '*') %}{% set changed = pimcore_csp.addAllowedUrls('script-src', ['https://evil.example']) %}");
+        } catch (\Twig\Sandbox\SecurityNotAllowedMethodError) {
+        }
+
+        $this->assertSame($header, $handler->getCspHeader());
+    }
+
+    private function resetDeviceDetector(): void
+    {
+        (new \ReflectionProperty(\Pimcore\Tool\DeviceDetector::class, 'instance'))->setValue(null, null);
+    }
+
     private function translatorWithGreeting(): \Symfony\Component\Translation\Translator
     {
         $translator = new \Symfony\Component\Translation\Translator('en');

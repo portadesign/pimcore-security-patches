@@ -19,6 +19,38 @@ trait P3SandboxRendering
         $this->sandboxEngine()->disableSandboxExtensionFromTwigEnvironment();
     }
 
+    protected function setTwigGlobal(string $name, mixed $value): void
+    {
+        $this->editTwigGlobals(static function (array $globals) use ($name, $value): array {
+            $globals[$name] = $value;
+
+            return $globals;
+        });
+    }
+
+    protected function removeTwigGlobal(string $name): void
+    {
+        $this->editTwigGlobals(static function (array $globals) use ($name): array {
+            unset($globals[$name]);
+
+            return $globals;
+        });
+    }
+
+    private function editTwigGlobals(\Closure $edit): void
+    {
+        $twig = $this->sandboxEngine()->getTwigEnvironment();
+
+        foreach (['globals', 'resolvedGlobals'] as $property) {
+            $reflection = new \ReflectionProperty(\Twig\Environment::class, $property);
+            $globals = $reflection->getValue($twig);
+
+            if (null !== $globals) {
+                $reflection->setValue($twig, $edit($globals));
+            }
+        }
+    }
+
     /**
      * @param array<string, mixed> $context
      */

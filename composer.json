@@ -23,7 +23,7 @@
     "conflict": {
         "phpoffice/phpspreadsheet": "<1.30.7",
         "pimcore/pimcore": "<10.6.9 || >=10.7",
-        "twig/twig": "<3.14.1"
+        "twig/twig": "<3.27.0"
     },
     "autoload": {
         "psr-4": {
@@ -128,7 +128,7 @@
                 {
                     "description": "CVE-2026-11407: Twig sandbox policy for Text layouts, mails and print, thumbnail array guard, objectTypes allowlist",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-                    "sha256": "34701cbe70e213542a7fa8986d4db3aa03b877042ea36d852ccb139d0bd59bdc"
+                    "sha256": "24562054b1364f69b250983a15b0d728e5b3d085fa773589d4c854da6b71259b"
                 },
                 {
                     "description": "PD-2026-002: resent logged mails, the log summary mail and workflow notification template mails sent without template rendering, mail log keeps the sent subject",
