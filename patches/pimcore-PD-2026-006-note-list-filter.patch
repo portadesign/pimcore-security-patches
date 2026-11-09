@@ -1,0 +1,28 @@
+ID: PD-2026-006 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: The note list filter accepts only the notes table columns and quotes the column in the date equality condition, so the filter property can no longer inject SQL.
+
+diff --git a/bundles/AdminBundle/Controller/Admin/ElementController.php b/bundles/AdminBundle/Controller/Admin/ElementController.php
+--- a/bundles/AdminBundle/Controller/Admin/ElementController.php
++++ b/bundles/AdminBundle/Controller/Admin/ElementController.php
+@@ -221,6 +221,10 @@
+             $comparisonKey = 'operator';
+ 
+             foreach ($filters as $filter) {
++                if (!is_string($filter[$propertyKey] ?? null) || !in_array($filter[$propertyKey], ['id', 'type', 'cid', 'ctype', 'date', 'user', 'title', 'description'], true)) {
++                    continue;
++                }
++
+                 $operator = '=';
+ 
+                 if ($filter['type'] == 'string') {
+@@ -259,7 +263,7 @@
+                 } else {
+                     if ($filter['type'] == 'date' && $filter[$comparisonKey] == 'eq') {
+                         $maxTime = $value + (86400 - 1); //specifies the top point of the range used in the condition
+-                        $dateCondition = '`' . $filter[$propertyKey] . '` ' . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
++                        $dateCondition = $db->quoteIdentifier($filter[$propertyKey]) . ' BETWEEN ' . $db->quote($value) . ' AND ' . $db->quote($maxTime);
+                         $conditions[] = $dateCondition;
+                     } else {
+                         $conditions[] = $db->quoteIdentifier($filter[$propertyKey]).' '.$operator.' '.$db->quote($value);
