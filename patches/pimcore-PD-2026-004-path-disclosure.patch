@@ -16,21 +16,21 @@ diff --git a/bundles/AdminBundle/Controller/Admin/TranslationController.php b/bu
          $data = $this->decodeJson($request->get('data'));
          $source = $request->get('source');
          $target = $request->get('target');
-@@ -890,8 +890,12 @@
+@@ -890,7 +890,12 @@
       */
      public function xliffExportDownloadAction(Request $request, ExporterInterface $translationExporter, ExportServiceInterface $exportService)
      {
 -        $id = $request->get('id');
 +        $id = $this->sanitzeExportId((string)$request->get('id'));
-         $exportFile = $exportService->getTranslationExporter()->getExportFilePath($id);
 +
-+        if (!is_file($exportFile)) {
++        if (!glob(PIMCORE_SYSTEM_TEMP_DIRECTORY . DIRECTORY_SEPARATOR . $id . '.*')) {
 +            throw $this->createNotFoundException('Export file does not exist');
 +        }
++
+         $exportFile = $exportService->getTranslationExporter()->getExportFilePath($id);
  
          $response = new BinaryFileResponse($exportFile);
-         $response->headers->set('Content-Type', $translationExporter->getContentType());
-@@ -1285,7 +1289,7 @@
+@@ -1285,7 +1290,7 @@
          $exportFile = PIMCORE_SYSTEM_TEMP_DIRECTORY . DIRECTORY_SEPARATOR . $id . '.html';
  
          if ($checkExistence && !file_exists($exportFile)) {
