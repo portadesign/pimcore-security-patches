@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches\Tests;
 
-#[\PHPUnit\Framework\Attributes\Group('PD-2026-001')]
+#[\PHPUnit\Framework\Attributes\Group('CVE-2026-58401')]
 final class AdminSessionTokenTest extends \PHPUnit\Framework\TestCase
 {
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\RejectedSerializedPayloads;

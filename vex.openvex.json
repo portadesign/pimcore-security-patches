@@ -2,8 +2,8 @@
     "@context": "https://openvex.dev/ns/v0.2.0",
     "@id": "https://github.com/portadesign/pimcore-11-security-patches/vex.openvex.json",
     "author": "Portadesign",
-    "timestamp": "2026-11-10T15:26:54Z",
-    "last_updated": "2026-11-10T15:26:54Z",
+    "timestamp": "2026-11-10T21:13:47Z",
+    "last_updated": "2026-11-10T21:13:47Z",
     "version": 6,
     "tooling": "pimcore-security-patches 11.5.x-dev",
     "statements": [
@@ -114,6 +114,42 @@
             ],
             "status": "fixed",
             "status_notes": "Fixed by patches/pimcore-CVE-2026-11407-twig-sandbox.patch."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-115894",
+                "aliases": [
+                    "GHSA-7gfm-v2fx-xrxm"
+                ]
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/pimcore-CVE-2026-11407-twig-sandbox.patch. GHSA-7gfm-v2fx-xrxm, published 2026-10-26. Model getters reachable from sandboxed Twig (user.getPassword(), pimcore_user(1).getPasswordRecoveryToken(), asset.getData()) are blocked by the same sandbox policy as CVE-2026-11407; see tests/TwigSandboxTest.php."
         },
         {
             "vulnerability": {
@@ -297,7 +333,46 @@
         },
         {
             "vulnerability": {
-                "name": "CVE-2026-115898"
+                "name": "CVE-2026-58401",
+                "aliases": [
+                    "GHSA-46p3-pxr2-m4j9"
+                ]
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/pimcore-CVE-2026-58401-admin-session-token.patch. GHSA-46p3-pxr2-m4j9, published 2026-10-20 for pimcore 11.5 before 11.5.19. Residual of CVE-2026-45162: Authentication::safelyUnserialize() deserialised the admin session token with any autoloadable class. The token is now deserialised with a class allowlist."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-115898",
+                "aliases": [
+                    "GHSA-hf99-42jw-j5hp"
+                ]
             },
             "products": [
                 {
@@ -327,6 +402,114 @@
             ],
             "status": "fixed",
             "status_notes": "Fixed by patches/admin-ui-classic-bundle-CVE-2026-115898-reset-mail-rendering.patch, patches/pimcore-CVE-2026-115898-workflow-deeplink.patch. GHSA-hf99-42jw-j5hp. Pimcore Studio is not part of 11.5; the equivalent paths are the admin lost-password mail, the login invitation mail and the workflow notification deeplink, which carry the request-derived router base URL (X-Forwarded-Prefix behind a trusted proxy). Host, X-Forwarded-Host, port and scheme cannot carry template syntax (Symfony rejects the host, the port is cast to int)."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-115891",
+                "aliases": [
+                    "GHSA-9gh3-v84c-qhv4"
+                ]
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/pimcore-CVE-2026-115891-notification-filter.patch. SQL injection through the property of /admin/notification/find-all filters; only title and timestamp are accepted."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-115890",
+                "aliases": [
+                    "GHSA-h25j-rvrm-527g"
+                ]
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/pimcore-CVE-2026-115890-listing-fieldcollection-join.patch. SQL injection through the field collection name in the data object listing JOIN; the name is quoted as a string literal. The grid does not pass request data to Listing\\Concrete::addFieldCollection() in 11.5, so this is reachable only through custom code."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-5362",
+                "aliases": [
+                    "GHSA-7gxw-q9j5-mrj4"
+                ]
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/pimcore-CVE-2026-5362-embed-editable-xss.patch. The advisory lists only 12.3.3, but the Embed editable of 11.5.4 and 11.5.14.1 echoed any stored value as markup (Embera autoEmbed returns text around URLs unchanged). The editable now outputs a single http(s) URL only and escapes URLs no provider recognises."
         },
         {
             "vulnerability": {

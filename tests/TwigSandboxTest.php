@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Portadesign\PimcoreSecurityPatches\Tests;
 
 #[\PHPUnit\Framework\Attributes\Group('CVE-2026-11407')]
+#[\PHPUnit\Framework\Attributes\Group('CVE-2026-115894')]
 final class TwigSandboxTest extends \PHPUnit\Framework\TestCase
 {
     private \Pimcore\Templating\TwigDefaultDelegatingEngine $engine;
@@ -299,13 +300,9 @@ final class TwigSandboxTest extends \PHPUnit\Framework\TestCase
 
         try {
             $rendered = $mail->getSubjectRendered();
-        } catch (\TypeError $e) {
-            // 11.5.14.1 names the template pimcore_email_subject but still cuts the message at ' in "__string', so substr() gets false
-            $this->assertStringContainsString('substr(): Argument #3', $e->getMessage());
-
-            return;
         } catch (\Exception $e) {
             $this->assertMatchesRegularExpression('/^Failed rendering the subject: Calling method "getPassword" on "Pimcore\\\\Model\\\\User" is not allowed in templates\./', $e->getMessage());
+            $this->assertStringNotContainsString('hash-123', $e->getMessage());
 
             return;
         }

@@ -11,6 +11,7 @@ $options = getopt(short_options: '', long_options: ['bump', 'tooling::']);
  *     products: array<string, list<string>>,
  *     advisories: list<array{
  *         cve: string,
+ *         ghsa?: string,
  *         pksa: string|null,
  *         status: string,
  *         package: string,
@@ -46,6 +47,11 @@ $auditIgnore = [];
 foreach ($manifest['advisories'] as $advisory) {
     if (is_string($advisory['pksa'])) {
         $auditIgnore[$advisory['pksa']] = $advisory['reason'];
+    } elseif (str_starts_with(haystack: $advisory['cve'], needle: 'CVE-')) {
+        $auditIgnore[$advisory['cve']] = $advisory['reason'];
+        if (is_string($advisory['ghsa'] ?? null)) {
+            $auditIgnore[$advisory['ghsa']] = $advisory['reason'];
+        }
     }
 
     if (!in_array(needle: $advisory['status'], haystack: ['fixed', 'affected', 'not_affected'], strict: true)) {
@@ -61,8 +67,9 @@ foreach ($manifest['advisories'] as $advisory) {
     }
 
     $vulnerability = ['name' => $advisory['cve']];
-    if (is_string($advisory['pksa'])) {
-        $vulnerability['aliases'] = [$advisory['pksa']];
+    $aliases = array_values(array: array_filter(array: [$advisory['pksa'], $advisory['ghsa'] ?? null], callback: is_string(...)));
+    if ([] !== $aliases) {
+        $vulnerability['aliases'] = $aliases;
     }
 
     $statement = ['vulnerability' => $vulnerability, 'products' => $products, 'status' => $advisory['status']];

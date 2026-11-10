@@ -2,6 +2,18 @@
     "config": {
         "audit": {
             "ignore": {
+                "CVE-2026-115890": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches",
+                "CVE-2026-115891": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches",
+                "CVE-2026-115894": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches",
+                "CVE-2026-115898": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches",
+                "CVE-2026-5362": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches",
+                "CVE-2026-58401": "CVE-2026-58401 fixed by portadesign/pimcore-security-patches",
+                "GHSA-46p3-pxr2-m4j9": "CVE-2026-58401 fixed by portadesign/pimcore-security-patches",
+                "GHSA-7gfm-v2fx-xrxm": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches",
+                "GHSA-7gxw-q9j5-mrj4": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches",
+                "GHSA-9gh3-v84c-qhv4": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches",
+                "GHSA-h25j-rvrm-527g": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches",
+                "GHSA-hf99-42jw-j5hp": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches",
                 "PKSA-6dhb-gq75-qpgr": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches",
                 "PKSA-882j-k212-wjbf": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches",
                 "PKSA-8x4n-f9v2-4s1d": "CVE-2026-27461 fixed by portadesign/pimcore-security-patches",
@@ -20,6 +32,18 @@
         "policy": {
             "advisories": {
                 "ignore-id": {
+                    "CVE-2026-115890": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches",
+                    "CVE-2026-115891": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches",
+                    "CVE-2026-115894": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches",
+                    "CVE-2026-115898": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches",
+                    "CVE-2026-5362": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches",
+                    "CVE-2026-58401": "CVE-2026-58401 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-46p3-pxr2-m4j9": "CVE-2026-58401 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-7gfm-v2fx-xrxm": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-7gxw-q9j5-mrj4": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-9gh3-v84c-qhv4": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-h25j-rvrm-527g": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches",
+                    "GHSA-hf99-42jw-j5hp": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches",
                     "PKSA-6dhb-gq75-qpgr": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches",
                     "PKSA-882j-k212-wjbf": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches",
                     "PKSA-8x4n-f9v2-4s1d": "CVE-2026-27461 fixed by portadesign/pimcore-security-patches",

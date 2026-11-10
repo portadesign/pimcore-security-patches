@@ -1,0 +1,114 @@
+ID: PD-2026-008 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 11.5.4, 11.5.14.1
+Summary: Mail::send() and getBodyHtmlRendered() rendered mail content as a Twig template more than once: an email document is rendered with the mail parameters and the result is rendered again, and the plain text part was derived from the already rendered HTML through a third pass. A parameter holding template syntax (newsletter subscriber first name in confirmation and newsletter mails) was executed. The document is now rendered with "{" in string parameters masked, the mask becomes &#123; (%7B URL-encoded, \u007b JSON-encoded) before the second pass, and the plain text part is converted from the rendered HTML without another pass. The second pass still receives the real parameters, so placeholders written by editors keep working.
+
+diff --git a/lib/Mail.php b/lib/Mail.php
+index 58a4389..430842c 100644
+--- a/lib/Mail.php
++++ b/lib/Mail.php
+@@ -429,11 +429,14 @@ class Mail extends Email
+     public function send(MailerInterface $mailer = null): static
+     {
+         $bodyHtmlRendered = $this->getBodyHtmlRendered();
++        $bodyTextRendered = $this->getTextBody()
++            ? $this->getBodyTextRendered()
++            : $this->convertHtmlToText($bodyHtmlRendered);
++
+         if ($bodyHtmlRendered) {
+             $this->html($bodyHtmlRendered);
+         }
+ 
+-        $bodyTextRendered = $this->getBodyTextRendered();
+         if ($bodyTextRendered) {
+             //add mime part for plain text body
+             $this->text($bodyTextRendered);
+@@ -594,6 +597,52 @@ class Mail extends Email
+         return $recipients;
+     }
+ 
++    private function convertHtmlToText(?string $htmlContent): string
++    {
++        if (!$htmlContent) {
++            return '';
++        }
++
++        try {
++            $html = new DomCrawler($htmlContent);
++
++            $body = $html->filter('body')->eq(0);
++            if ($body->count()) {
++                $style = $body->filter('style')->eq(0);
++                if ($style->count()) {
++                    $style->clear();
++                }
++                $htmlContent = $body->html();
++            }
++
++            $html->clear();
++            unset($html);
++
++            return $this->html2Text($htmlContent);
++        } catch (Exception $e) {
++            Logger::err((string) $e);
++
++            return '';
++        }
++    }
++
++    private const TEMPLATE_SYNTAX_MASK = "\u{E000}";
++
++    /**
++     * @param array<array-key, mixed> $params
++     *
++     * @return array<array-key, mixed>
++     */
++    private function maskTemplateSyntax(array $params): array
++    {
++        return array_map(
++            fn (mixed $value): mixed => is_array($value)
++                ? $this->maskTemplateSyntax($value)
++                : (is_string($value) ? str_replace('{', self::TEMPLATE_SYNTAX_MASK, $value) : $value),
++            $params
++        );
++    }
++
+     private function renderParams(string $string, string $context): string
+     {
+         $templatingEngine = Pimcore::getContainer()->get('pimcore.templating.engine.delegating');
+@@ -664,9 +713,8 @@ class Mail extends Email
+         if (!$html) {
+             // render document
+             if ($this->getDocument() instanceof Model\Document) {
+-                $attributes = $this->getParams();
+-
+-                $html = Model\Document\Service::render($this->getDocument(), $attributes);
++                $html = Model\Document\Service::render($this->getDocument(), $this->maskTemplateSyntax($this->getParams()));
++                $html = str_replace([self::TEMPLATE_SYNTAX_MASK, rawurlencode(self::TEMPLATE_SYNTAX_MASK), '\\ue000'], ['&#123;', '%7B', '\\u007b'], $html);
+             }
+         }
+ 
+@@ -699,22 +747,7 @@ class Mail extends Email
+         } else {
+             //creating text version from html email
+             try {
+-                $htmlContent = $this->getBodyHtmlRendered();
+-                $html = new DomCrawler($htmlContent);
+-
+-                $body = $html->filter('body')->eq(0);
+-                if ($body->count()) {
+-                    $style = $body->filter('style')->eq(0);
+-                    if ($style->count()) {
+-                        $style->clear();
+-                    }
+-                    $htmlContent = $body->html();
+-                }
+-
+-                $html->clear();
+-                unset($html);
+-
+-                $content = $this->html2Text($htmlContent);
++                $content = $this->convertHtmlToText($this->getBodyHtmlRendered());
+             } catch (Exception $e) {
+                 Logger::err((string) $e);
+                 $content = '';

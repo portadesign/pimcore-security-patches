@@ -35,6 +35,16 @@
             "reason": "CVE-2026-11407 fixed by portadesign/pimcore-security-patches"
         },
         {
+            "cve": "CVE-2026-115894",
+            "ghsa": "GHSA-7gfm-v2fx-xrxm",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
+            "notes": "GHSA-7gfm-v2fx-xrxm, published 2026-10-26. Model getters reachable from sandboxed Twig (user.getPassword(), pimcore_user(1).getPasswordRecoveryToken(), asset.getData()) are blocked by the same sandbox policy as CVE-2026-11407; see tests/TwigSandboxTest.php.",
+            "reason": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches"
+        },
+        {
             "cve": "CVE-2026-5394",
             "pksa": "PKSA-vp19-ydt7-tws9",
             "status": "fixed",
@@ -75,12 +85,14 @@
             "reason": "CVE-2026-45162 fixed by portadesign/pimcore-security-patches"
         },
         {
-            "cve": "PD-2026-001",
+            "cve": "CVE-2026-58401",
+            "ghsa": "GHSA-46p3-pxr2-m4j9",
             "pksa": null,
-            "status": "hardening",
+            "status": "fixed",
             "package": "pimcore/pimcore",
-            "patch": "patches/pimcore-PD-2026-001-admin-session-token.patch",
-            "reason": "PD-2026-001: no public advisory; admin session token class allowlist, Portadesign hardening, not listed in the VEX"
+            "patch": "patches/pimcore-CVE-2026-58401-admin-session-token.patch",
+            "notes": "GHSA-46p3-pxr2-m4j9, published 2026-10-20 for pimcore 11.5 before 11.5.19. Residual of CVE-2026-45162: Authentication::safelyUnserialize() deserialised the admin session token with any autoloadable class. The token is now deserialised with a class allowlist.",
+            "reason": "CVE-2026-58401 fixed by portadesign/pimcore-security-patches"
         },
         {
             "cve": "PD-2026-002",
@@ -92,6 +104,7 @@
         },
         {
             "cve": "CVE-2026-115898",
+            "ghsa": "GHSA-hf99-42jw-j5hp",
             "pksa": null,
             "status": "fixed",
             "package": "pimcore/pimcore",
@@ -100,12 +113,50 @@
             "reason": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches"
         },
         {
+            "cve": "CVE-2026-115891",
+            "ghsa": "GHSA-9gh3-v84c-qhv4",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-115891-notification-filter.patch",
+            "notes": "SQL injection through the property of /admin/notification/find-all filters; only title and timestamp are accepted.",
+            "reason": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-115890",
+            "ghsa": "GHSA-h25j-rvrm-527g",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-115890-listing-fieldcollection-join.patch",
+            "notes": "SQL injection through the field collection name in the data object listing JOIN; the name is quoted as a string literal. The grid does not pass request data to Listing\\Concrete::addFieldCollection() in 11.5, so this is reachable only through custom code.",
+            "reason": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-5362",
+            "ghsa": "GHSA-7gxw-q9j5-mrj4",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-5362-embed-editable-xss.patch",
+            "notes": "The advisory lists only 12.3.3, but the Embed editable of 11.5.4 and 11.5.14.1 echoed any stored value as markup (Embera autoEmbed returns text around URLs unchanged). The editable now outputs a single http(s) URL only and escapes URLs no provider recognises.",
+            "reason": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches"
+        },
+        {
             "cve": "PD-2026-007",
             "pksa": null,
             "status": "hardening",
             "package": "pimcore/admin-ui-classic-bundle",
             "patch": "patches/admin-ui-classic-bundle-PD-2026-007-classificationstore-sort.patch",
             "reason": "PD-2026-007: no public advisory; classification store column of the object grid sort validated before it becomes an SQL alias, Portadesign hardening, not listed in the VEX"
+        },
+        {
+            "cve": "PD-2026-008",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-008-mail-document-params.patch",
+            "reason": "PD-2026-008: no public advisory; mail parameters are not evaluated as Twig by the document, HTML and plain text render passes (newsletter confirmation and newsletter mails), Portadesign hardening, not listed in the VEX"
         },
         {
             "cve": "CVE-2026-55072",
