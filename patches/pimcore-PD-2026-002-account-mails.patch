@@ -1,0 +1,31 @@
+ID: PD-2026-002 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: The lost-password mail and the user invitation mail are sent without template rendering. Requires the Mail::sendWithoutRendering() patch.
+
+diff --git a/bundles/AdminBundle/Controller/Admin/LoginController.php b/bundles/AdminBundle/Controller/Admin/LoginController.php
+index 6c772ed..90e8ad5 100644
+--- a/bundles/AdminBundle/Controller/Admin/LoginController.php
++++ b/bundles/AdminBundle/Controller/Admin/LoginController.php
+@@ -238,7 +238,7 @@ class LoginController extends AdminAbstractController implements BruteforceProte
+                         $mail = Tool::getMail([$user->getEmail()], 'Pimcore lost password service');
+                         $mail->setIgnoreDebugMode(true);
+                         $mail->text("Login to pimcore and change your password using the following link. This temporary login link will expire in 24 hours: \r\n\r\n" . $loginUrl);
+-                        $mail->send();
++                        $mail->sendWithoutRendering();
+                     }
+ 
+                     // directly return event response
+diff --git a/bundles/AdminBundle/Controller/Admin/UserController.php b/bundles/AdminBundle/Controller/Admin/UserController.php
+index d29b517..dc1062f 100644
+--- a/bundles/AdminBundle/Controller/Admin/UserController.php
++++ b/bundles/AdminBundle/Controller/Admin/UserController.php
+@@ -1215,7 +1215,7 @@ class UserController extends AdminAbstractController implements KernelController
+                     $mail = Tool::getMail([$user->getEmail()], 'Pimcore login invitation for ' . \Pimcore\Bundle\AdminBundle\Security\TrustedUrl::authority($request));
+                     $mail->setIgnoreDebugMode(true);
+                     $mail->text("Login to pimcore and change your password using the following link. This temporary login link will expire in  24 hours: \r\n\r\n" . $loginUrl);
+-                    $mail->send();
++                    $mail->sendWithoutRendering();
+ 
+                     $success = true;
+                     $message = sprintf($translator->trans('invitation_link_sent', [], 'admin'), $user->getEmail());
