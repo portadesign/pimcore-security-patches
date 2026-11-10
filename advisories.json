@@ -91,6 +91,15 @@
             "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
         },
         {
+            "cve": "CVE-2026-115898",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/admin-ui-classic-bundle-CVE-2026-115898-reset-mail-rendering.patch, patches/pimcore-CVE-2026-115898-workflow-deeplink.patch",
+            "notes": "GHSA-hf99-42jw-j5hp. Pimcore Studio is not part of 11.5; the equivalent paths are the admin lost-password mail, the login invitation mail and the workflow notification deeplink, which carry the request-derived router base URL (X-Forwarded-Prefix behind a trusted proxy). Host, X-Forwarded-Host, port and scheme cannot carry template syntax (Symfony rejects the host, the port is cast to int).",
+            "reason": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches"
+        },
+        {
             "cve": "PD-2026-007",
             "pksa": null,
             "status": "hardening",

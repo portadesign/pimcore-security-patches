@@ -2,8 +2,8 @@
     "@context": "https://openvex.dev/ns/v0.2.0",
     "@id": "https://github.com/portadesign/pimcore-11-security-patches/vex.openvex.json",
     "author": "Portadesign",
-    "timestamp": "2026-11-09T20:21:28Z",
-    "last_updated": "2026-11-09T20:21:28Z",
+    "timestamp": "2026-11-10T15:26:54Z",
+    "last_updated": "2026-11-10T15:26:54Z",
     "version": 6,
     "tooling": "pimcore-security-patches 11.5.x-dev",
     "statements": [
@@ -294,6 +294,39 @@
             ],
             "status": "fixed",
             "status_notes": "Fixed by patches/pimcore-CVE-2026-55220-unserialize-hardening.patch, patches/pimcore-CVE-2026-45162-unserialize-remaining.patch, patches/admin-ui-classic-bundle-CVE-2026-45162-dashboard.patch."
+        },
+        {
+            "vulnerability": {
+                "name": "CVE-2026-115898"
+            },
+            "products": [
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.4",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.4"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@11.5.14.1"
+                    }
+                },
+                {
+                    "@id": "pkg:composer/pimcore/pimcore@v11.5.14.1",
+                    "identifiers": {
+                        "purl": "pkg:composer/pimcore/pimcore@v11.5.14.1"
+                    }
+                }
+            ],
+            "status": "fixed",
+            "status_notes": "Fixed by patches/admin-ui-classic-bundle-CVE-2026-115898-reset-mail-rendering.patch, patches/pimcore-CVE-2026-115898-workflow-deeplink.patch. GHSA-hf99-42jw-j5hp. Pimcore Studio is not part of 11.5; the equivalent paths are the admin lost-password mail, the login invitation mail and the workflow notification deeplink, which carry the request-derived router base URL (X-Forwarded-Prefix behind a trusted proxy). Host, X-Forwarded-Host, port and scheme cannot carry template syntax (Symfony rejects the host, the port is cast to int)."
         },
         {
             "vulnerability": {

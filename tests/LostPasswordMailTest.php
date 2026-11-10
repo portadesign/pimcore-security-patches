@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches\Tests;
 
-#[\PHPUnit\Framework\Attributes\Group('PD-2026-002')]
+#[\PHPUnit\Framework\Attributes\Group('CVE-2026-115898')]
 #[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
 final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
 {
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\MainDomainFixture;
+
     private const USERNAME = 'pd-sec-lostpassword-user';
 
     private const PROXY_NETWORK = '2001:db8::/32';
 
-    private const FIXTURE_DOMAIN = 'lostpassword.example.test';
-
     private const MAIL_INTRO = "Login to pimcore and change your password using the following link. This temporary login link will expire in 24 hours: \n\n";
 
     private \Pimcore\Model\User $user;
-
-    private string $domain;
-
-    private ?array $originalSystemSettings = null;
 
     /**
      * @var list<string>
@@ -176,37 +172,6 @@ final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
         $matched = preg_match('~\?token=([^&\s]+)&reset=true$~', $body, $matches);
 
         return 1 === $matched ? $matches[1] : 'TOKEN-NOT-FOUND-IN-BODY';
-    }
-
-    private function ensureDomain(): void
-    {
-        $settings = \Pimcore\SystemSettingsConfig::get();
-        $this->domain = (string) ($settings['general']['domain'] ?? '');
-
-        if ('' !== $this->domain) {
-            return;
-        }
-
-        $this->originalSystemSettings = $settings;
-        $this->domain = self::FIXTURE_DOMAIN;
-        $settings['general']['domain'] = self::FIXTURE_DOMAIN;
-        $this->systemSettings()->testSave($settings);
-    }
-
-    private function restoreDomain(): void
-    {
-        if (null !== $this->originalSystemSettings) {
-            $this->systemSettings()->testSave($this->originalSystemSettings);
-            $this->originalSystemSettings = null;
-        }
-    }
-
-    private function systemSettings(): \Pimcore\SystemSettingsConfig
-    {
-        $service = \Pimcore::getContainer()->get(\Pimcore\SystemSettingsConfig::class);
-        \assert($service instanceof \Pimcore\SystemSettingsConfig);
-
-        return $service;
     }
 
     private function deleteUser(): void

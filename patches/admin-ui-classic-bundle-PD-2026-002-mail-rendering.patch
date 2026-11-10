@@ -1,7 +1,7 @@
 ID: PD-2026-002 (no public advisory, Portadesign hardening)
 Package: pimcore/admin-ui-classic-bundle
 Verified: 1.7.6, 1.7.16
-Summary: The lost-password mail and resent logged mails are sent without template rendering; body and subject reach the recipient exactly as built or logged. A log entry with a document id and no stored body is no longer re-rendered from the document. A resend of a log entry without stored text is sent HTML-only; send() used to derive the text part from the HTML.
+Summary: Resent logged mails are sent without template rendering; body and subject reach the recipient exactly as logged. A log entry with a document id and no stored body is no longer re-rendered from the document. A resend of a log entry without stored text is sent HTML-only; send() used to derive the text part from the HTML.
 
 diff --git a/src/Controller/Admin/EmailController.php b/src/Controller/Admin/EmailController.php
 index dd0e6aa..65b99be 100644
@@ -16,16 +16,3 @@ index dd0e6aa..65b99be 100644
              $success = true;
          }
  
-diff --git a/src/Controller/Admin/LoginController.php b/src/Controller/Admin/LoginController.php
-index 094e21c..412df54 100644
---- a/src/Controller/Admin/LoginController.php
-+++ b/src/Controller/Admin/LoginController.php
-@@ -259,7 +259,7 @@ class LoginController extends AdminAbstractController implements KernelControlle
-                         $mail = Tool::getMail([$user->getEmail()], 'Pimcore lost password service');
-                         $mail->setIgnoreDebugMode(true);
-                         $mail->text("Login to pimcore and change your password using the following link. This temporary login link will expire in 24 hours: \r\n\r\n" . $loginUrl);
--                        $mail->send();
-+                        $mail->sendWithoutRendering();
-                     }
- 
-                     // directly return event response

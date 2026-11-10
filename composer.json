@@ -119,6 +119,11 @@
                     "description": "PD-2026-002 (no CVE): send the application log summary mail without template rendering, log the sent subject",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-PD-2026-002-mail-rendering.patch",
                     "sha256": "36d9b062599f800df742074fa1880341c2232b8831f83a09c943b8a6196eb1c0"
+                },
+                {
+                    "description": "CVE-2026-115898: workflow notification deeplink no longer carries template syntax from the request base URL",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-115898-workflow-deeplink.patch",
+                    "sha256": "bbf3bc2239f6c68c91e8fa8cb88e287449a2da90e55a44c233882174575312c1"
                 }
             ],
             "pimcore/admin-ui-classic-bundle": [
@@ -135,7 +140,12 @@
                 {
                     "description": "PD-2026-002 (no CVE): send mails built from finished or stored content without template rendering",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-PD-2026-002-mail-rendering.patch",
-                    "sha256": "069cd2137e8028051389e3bbc1be884f00fcab182f43604e745457fba9784481"
+                    "sha256": "2816b7ffa9b70417606e2dac6aa9f517a89544b698bf0fe580bb91366962a20a"
+                },
+                {
+                    "description": "CVE-2026-115898: send the lost-password and login invitation mails without template rendering",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/admin-ui-classic-bundle-CVE-2026-115898-reset-mail-rendering.patch",
+                    "sha256": "4b68188f621b151afd20f59607963996b7b2a40dc06e673c25ed3110e749c81a"
                 },
                 {
                     "description": "PD-2026-007 (no CVE): validate the classification store column of the object grid sort before it becomes an SQL alias",

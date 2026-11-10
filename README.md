@@ -52,6 +52,7 @@ composer require portadesign/pimcore-security-patches:^11.5
 | CVE-2026-45260 | pimcore | WebDAV MOVE needs `create` on the destination, `publish` on the asset, `delete` when overwriting/restoring, `rename` for a rename; checks run in a Sabre `beforeMove` plugin before the destination is deleted; an existing destination folder needs `rename`, a taken target path or a cross-folder move onto a destination of another name returns 409; a failed save returns 500 |
 | CVE-2026-45703 | pimcore | WordExport skips elements the user may not `view` (no 403) |
 | CVE-2026-45704 | pimcore | Custom report detail, data, chart, drill-down and CSV endpoints enforce the listing sharing rule; `reports_config` users and admins keep full access |
+| CVE-2026-115898 | admin-ui-classic-bundle, pimcore | The lost-password and login invitation mails (reset link with the request-derived base URL) are sent without template rendering, so template code placed in `X-Forwarded-Prefix` is no longer executed; the workflow notification deeplink percent-encodes characters outside `A-Za-z0-9/._~%` of the base URL |
 | CVE-2026-44741 | admin-ui-classic-bundle | Translation grid filter: column allowlist, quoted identifiers |
 | CVE-2026-45162 | admin-ui-classic-bundle | Dashboard config deserialised without classes |
 | PD-2026-007 (no CVE, hardening) | admin-ui-classic-bundle | Object grid sort on a classification store column: field must be a classification store field of the class, group and key ids must be integers, otherwise `InvalidArgumentException` |
