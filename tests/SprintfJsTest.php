@@ -23,6 +23,8 @@ final class SprintfJsTest extends \PHPUnit\Framework\TestCase
         if (null !== $this->harness && is_file($this->harness)) {
             unlink($this->harness);
         }
+
+        $this->harness = null;
     }
 
     /**
@@ -101,7 +103,7 @@ final class SprintfJsTest extends \PHPUnit\Framework\TestCase
         $this->assertNotFalse($start, 'sprintf definition not found in functions.js');
         $this->assertNotFalse($end, 'array_merge marker not found in functions.js');
 
-        $this->harness = tempnam(sys_get_temp_dir(), 'pd-sec-sprintf-') . '.js';
+        $this->harness = (string) tempnam(sys_get_temp_dir(), 'pd-sec-sprintf-');
         file_put_contents($this->harness, "var alerts = [];\nvar alert = function (message) { alerts.push(String(message)); };\n"
             . substr($source, $start, $end - $start)
             . "\nvar calls = JSON.parse(require('fs').readFileSync(0, 'utf8'));\n"

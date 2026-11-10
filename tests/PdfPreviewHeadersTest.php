@@ -52,7 +52,9 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
     protected function tearDown(): void
     {
         $this->authenticate(null);
+        $assetId = $this->asset->getId();
         $this->deleteAssetByPath('/' . self::FILENAME);
+        \Pimcore\Db::get()->executeStatement('DELETE FROM versions WHERE ctype = ? AND cid = ?', ['asset', $assetId]);
         $this->deleteUserByName(self::USERNAME);
         $this->deleteUserByName(self::RESTRICTED_USERNAME);
         \Pimcore\Db::get()->executeStatement('DELETE FROM messenger_messages WHERE id > ?', [$this->highestMessageIdBefore]);
