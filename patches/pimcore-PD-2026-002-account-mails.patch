@@ -17,7 +17,7 @@ index 6c772ed..90e8ad5 100644
  
                      // directly return event response
 diff --git a/bundles/AdminBundle/Controller/Admin/UserController.php b/bundles/AdminBundle/Controller/Admin/UserController.php
-index dfb09e2..9a238b2 100644
+index d29b517..dc1062f 100644
 --- a/bundles/AdminBundle/Controller/Admin/UserController.php
 +++ b/bundles/AdminBundle/Controller/Admin/UserController.php
 @@ -1215,7 +1215,7 @@ class UserController extends AdminAbstractController implements KernelController
