@@ -32,16 +32,16 @@ check() {
     echo "no patches listed for $package ($3)"
     return 0
   fi
+  echo "-- sequential apply ($3)"
+  (cd "$1" && git init -q) || fail=1
   for name in $names; do
     p="$root/patches/$name"
-    if (cd "$1" && git apply --check "$p" && patch -p1 --dry-run -s < "$p" > /dev/null); then
-      echo "OK   $(basename "$p")"
+    if (cd "$1" && git apply --check "$p" && patch -p1 --dry-run -s < "$p" > /dev/null && git apply "$p"); then
+      echo "OK   $name"
     else
-      echo "FAIL $(basename "$p")"; fail=1
+      echo "FAIL $name"; fail=1
     fi
   done
-  echo "-- sequential apply ($3)"
-  (cd "$1" && git init -q && failed=0 && for name in $names; do git apply "$root/patches/$name" || { echo "FAIL sequential $name"; failed=1; }; done; exit $failed) || fail=1
   probe_minipaint "$1" || fail=1
   return $fail
 }
