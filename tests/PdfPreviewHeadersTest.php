@@ -23,9 +23,14 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
 
     private \Pimcore\Model\Asset\Document $asset;
 
+    private ?\Symfony\Component\HttpFoundation\Request $previewRequest = null;
+
+    private mixed $originalCspSettings = null;
+
     protected function setUp(): void
     {
         $this->highestMessageIdBefore = $this->highestMessageId();
+        $this->originalCspSettings = \Pimcore\Config::getSystemConfiguration('admin_csp_header');
         $this->deleteUserByName(self::USERNAME);
         $this->deleteUserByName(self::RESTRICTED_USERNAME);
         $this->deleteAssetByPath('/' . self::FILENAME);
@@ -51,6 +56,7 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
 
     protected function tearDown(): void
     {
+        \Pimcore\Config::setSystemConfiguration($this->originalCspSettings, 'admin_csp_header');
         $this->authenticate(null);
         $assetId = $this->asset->getId();
         $this->deleteAssetByPath('/' . self::FILENAME);
@@ -65,7 +71,7 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('nosniff', $this->preview()->headers->get('X-Content-Type-Options'));
     }
 
-    public function testPreviewResponseCarriesARestrictiveContentSecurityPolicy(): void
+    public function testPreviewResponseForbidsScriptExecutionThroughContentSecurityPolicy(): void
     {
         $policy = (string) $this->preview()->headers->get('Content-Security-Policy');
 
@@ -75,8 +81,35 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
             $directives[array_shift($parts)] = $parts;
         }
 
-        $this->assertSame(["'none'"], $directives['default-src'] ?? null, 'default-src must be none: ' . $policy);
-        $this->assertArrayNotHasKey('script-src', $directives, 'no script source may be allowed: ' . $policy);
+        $this->assertSame(["'none'"], $directives['script-src'] ?? null, 'script-src must be none: ' . $policy);
+    }
+
+    public function testPreviewResponseIsDisplayedInlineAsAPdf(): void
+    {
+        $response = $this->preview();
+
+        $this->assertMatchesRegularExpression('/^inline; filename="?preview\.pdf"?$/', (string) $response->headers->get('Content-Disposition'));
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+    }
+
+    public function testPreviewPolicyIsNotReplacedByTheAdminPolicyHeader(): void
+    {
+        $response = $this->preview();
+        $ownPolicy = (string) $response->headers->get('Content-Security-Policy');
+        $this->assertNotSame('', $ownPolicy);
+
+        $response = $this->passThroughAdminSecurityListener($this->previewRequest, $response);
+
+        $this->assertSame($ownPolicy, $response->headers->get('Content-Security-Policy'));
+    }
+
+    public function testControlOtherAdminResponsesReceiveTheAdminPolicyHeader(): void
+    {
+        $request = \Symfony\Component\HttpFoundation\Request::create('/admin/settings/get-system');
+
+        $response = $this->passThroughAdminSecurityListener($request, new \Symfony\Component\HttpFoundation\Response('{}'));
+
+        $this->assertStringStartsWith("default-src 'self' ", (string) $response->headers->get('Content-Security-Policy'));
     }
 
     public function testControlPreviewStillServesTheUploadedPdf(): void
@@ -115,7 +148,36 @@ final class PdfPreviewHeadersTest extends \PHPUnit\Framework\TestCase
             parameters: ['id' => $id ?? $this->asset->getId()],
         );
 
+        $this->previewRequest = $request;
+
         return $this->adminController(\Pimcore\Bundle\AdminBundle\Controller\Admin\Asset\AssetController::class)->getPreviewDocumentAction($request);
+    }
+
+    private function passThroughAdminSecurityListener(
+        \Symfony\Component\HttpFoundation\Request $request,
+        \Symfony\Component\HttpFoundation\Response $response,
+    ): \Symfony\Component\HttpFoundation\Response {
+        \Pimcore\Config::setSystemConfiguration(['enabled' => true, 'exclude_paths' => []], 'admin_csp_header');
+
+        $container = \Pimcore::getContainer();
+        $contextResolver = $container->get(\Pimcore\Http\Request\Resolver\PimcoreContextResolver::class);
+        $contextResolver->setPimcoreContext($request, \Pimcore\Http\Request\Resolver\PimcoreContextResolver::CONTEXT_ADMIN);
+
+        $config = new \Pimcore\Config();
+        $listener = new \Pimcore\Bundle\AdminBundle\EventListener\AdminSecurityListener(
+            $container->get(\Pimcore\Http\RequestHelper::class),
+            new \Pimcore\Bundle\AdminBundle\Security\ContentSecurityPolicyHandler($config, []),
+            $config,
+        );
+        $listener->setPimcoreContextResolver($contextResolver);
+        $listener->onKernelResponse(new \Symfony\Component\HttpKernel\Event\ResponseEvent(
+            \Pimcore::getKernel(),
+            $request,
+            \Symfony\Component\HttpKernel\HttpKernelInterface::MAIN_REQUEST,
+            $response,
+        ));
+
+        return $response;
     }
 
     private function highestMessageId(): int

@@ -118,6 +118,19 @@ final class LostPasswordLinkHostTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($this->user->getId(), \Pimcore\Tool\Authentication::authenticateToken(urldecode($this->mailedToken()))?->getId());
     }
 
+    public function testPortOfATrustedHostIsNotCarriedIntoTheLink(): void
+    {
+        \Symfony\Component\HttpFoundation\Request::setTrustedHosts(['^lostlink\.example\.test$', '^allowed\.example$']);
+
+        $response = $this->postLostPassword(self::USERNAME, ['REMOTE_ADDR' => $this->untrustedAddress(), 'HTTP_HOST' => 'allowed.example:4444']);
+
+        $this->assertNeutralResult($response);
+        $this->assertSame(
+            self::MAIL_INTRO . 'http://allowed.example/admin/login/login?token=' . $this->mailedToken() . '&reset=true',
+            $this->singleMail()['text'],
+        );
+    }
+
     public function testControlTrustedHostIsUsedWithoutConfiguredDomain(): void
     {
         $this->setSystemDomain('');

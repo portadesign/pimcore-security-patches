@@ -127,6 +127,31 @@ final class InvitationLinkHostTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testPortOfATrustedHostIsNotCarriedIntoTheLinkOrSubject(): void
+    {
+        \Symfony\Component\HttpFoundation\Request::setTrustedHosts(['^invite\.example\.test$', '^allowed\.example$']);
+
+        $result = $this->invite(self::INVITEE_USERNAME, ['REMOTE_ADDR' => $this->untrustedAddress(), 'HTTP_HOST' => 'allowed.example:4444']);
+
+        $mail = $this->singleMail();
+        $this->assertTrue($result['success'], $result['message']);
+        $this->assertSame('Pimcore login invitation for allowed.example', $mail['subject']);
+        $this->assertSame(
+            self::MAIL_INTRO . 'http://allowed.example/admin/login/login?token=' . $this->mailedToken() . '&reset=1',
+            $mail['text'],
+        );
+    }
+
+    public function testFailureMessageNamesTheGeneralDomainSetting(): void
+    {
+        $this->setSystemDomain('');
+
+        $result = $this->invite(self::INVITEE_USERNAME, ['REMOTE_ADDR' => $this->untrustedAddress(), 'HTTP_HOST' => 'evil.example']);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('general.domain', $result['message']);
+    }
+
     public function testNoMailWithoutConfiguredDomainAndTrustedHosts(): void
     {
         $this->setSystemDomain('');

@@ -92,7 +92,7 @@ final class LostPasswordEnumerationTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame($known->getStatusCode(), $other->getStatusCode());
         $this->assertFalse(str_contains((string) $other->getContent(), 'class="text error"'), 'response for ' . $username . ' shows an error block');
-        $this->assertSame($this->resultBlock($known), $this->resultBlock($other));
+        $this->assertSame($this->normalizedBody($known), $this->normalizedBody($other));
         $this->assertCount(1, $this->sentMails, 'only the active user with an email address receives a mail');
     }
 
@@ -146,7 +146,7 @@ final class LostPasswordEnumerationTest extends \PHPUnit\Framework\TestCase
 
         for ($attempt = 1; $attempt <= 8; ++$attempt) {
             $response = $this->postLostPassword($username, ['REMOTE_ADDR' => $address, 'HTTP_HOST' => self::DOMAIN]);
-            $block = $this->resultBlock($response);
+            $block = $this->normalizedBody($response);
 
             if (str_contains($block, 'Too many attempts')) {
                 return ['attempt' => $attempt, 'block' => $block];
@@ -156,11 +156,14 @@ final class LostPasswordEnumerationTest extends \PHPUnit\Framework\TestCase
         return ['attempt' => 0, 'block' => ''];
     }
 
-    private function resultBlock(\Symfony\Component\HttpFoundation\Response $response): string
+    private function normalizedBody(\Symfony\Component\HttpFoundation\Response $response): string
     {
-        $matched = preg_match('~<div class="text .*?</div>~s', (string) $response->getContent(), $matches);
+        $body = (string) $response->getContent();
+        $body = (string) preg_replace('~<!--[A-Za-z0-9+/=]*-->~', '', $body);
+        $body = (string) preg_replace('~\?_dc=\d+~', '', $body);
+        $body = (string) preg_replace('~<div id="sfwdt.*?(?=</body>)~s', '', $body);
 
-        return 1 === $matched ? $matches[0] : 'NO-RESULT-BLOCK-IN-RESPONSE';
+        return $body;
     }
 
     private function deleteAccounts(): void
