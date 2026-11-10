@@ -18,6 +18,8 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
 
     private const TEMPLATE = '@PimcoreCore/Workflow/NotificationEmail/notificationEmail.html.twig';
 
+    private const DOCUMENT_KEY = 'pd-sec-workflow-mail';
+
     private \Pimcore\Model\Asset\Folder $folder;
 
     private string $originalBaseUrl = '';
@@ -36,6 +38,8 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
             'active' => true,
         ]);
         $this->folder = $this->createAssetFolder(1, self::FOLDER);
+        $this->removeDocument();
+        $this->createDocument();
         $this->startCapturingMails();
     }
 
@@ -43,6 +47,7 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
     {
         $this->stopCapturingMails();
         $this->routerContext()->setBaseUrl($this->originalBaseUrl);
+        $this->removeDocument();
         $this->deleteAssetByPath('/' . self::FOLDER);
         $this->restoreDomain();
         $this->deleteUser();
@@ -72,6 +77,38 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
         $this->assertDeeplinkIsMailed($expectedBaseUrl);
     }
 
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function documentBaseUrlProvider(): array
+    {
+        return [
+            'path prefix with expression' => ['/proxy{{7*7}}', '/proxy%7B%7B7%2A7%7D%7D'],
+            'path prefix with statement' => ['/{% set a = 1 %}x', '/%7B%25%20set%20a%20%3D%201%20%25%7Dx'],
+            'path prefix with comment' => ['/{# c #}', '/%7B%23%20c%20%23%7D'],
+            'path prefix with filter on empty string' => ["/{{ ''|trans }}", '/%7B%7B%20%27%27%7Ctrans%20%7D%7D'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('documentBaseUrlProvider')]
+    public function testDocumentMailDeeplinkDoesNotCarryTemplateSyntaxFromTheRequestBaseUrl(string $baseUrl, string $expectedBaseUrl): void
+    {
+        $this->routerContext()->setBaseUrl($baseUrl);
+
+        $this->notify(\Pimcore\Workflow\EventSubscriber\NotificationSubscriber::MAIL_TYPE_DOCUMENT);
+
+        $this->assertDeeplinkIsMailed($expectedBaseUrl);
+    }
+
+    public function testControlDocumentMailKeepsAPlainBaseUrl(): void
+    {
+        $this->routerContext()->setBaseUrl('/pim');
+
+        $this->notify(\Pimcore\Workflow\EventSubscriber\NotificationSubscriber::MAIL_TYPE_DOCUMENT);
+
+        $this->assertDeeplinkIsMailed('/pim');
+    }
+
     public function testControlPlainBaseUrlIsKeptInTheDeeplink(): void
     {
         $this->routerContext()->setBaseUrl('/pim');
@@ -99,7 +136,7 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
         $this->assertStringContainsString('<a href="' . $expectedLink . '"', $this->sentMails[0]['html']);
     }
 
-    private function notify(): void
+    private function notify(string $mailType = \Pimcore\Workflow\EventSubscriber\NotificationSubscriber::MAIL_TYPE_TEMPLATE): void
     {
         $service = \Pimcore::getContainer()->get(\Pimcore\Workflow\Notification\NotificationEmailService::class);
         \assert($service instanceof \Pimcore\Workflow\Notification\NotificationEmailService);
@@ -111,9 +148,29 @@ final class WorkflowNotificationDeeplinkTest extends \PHPUnit\Framework\TestCase
             subjectType: 'Asset',
             subject: $this->folder,
             action: 'publish',
-            mailType: \Pimcore\Workflow\EventSubscriber\NotificationSubscriber::MAIL_TYPE_TEMPLATE,
-            mailPath: self::TEMPLATE,
+            mailType: $mailType,
+            mailPath: \Pimcore\Workflow\EventSubscriber\NotificationSubscriber::MAIL_TYPE_DOCUMENT === $mailType ? '/' . self::DOCUMENT_KEY : self::TEMPLATE,
         );
+    }
+
+    private function createDocument(): void
+    {
+        $document = new \Pimcore\Model\Document\Email();
+        $document->setParentId(1);
+        $document->setKey(self::DOCUMENT_KEY);
+        $document->setController(\Portadesign\PimcoreSecurityPatches\Tests\Support\DeeplinkProbeController::class . '::renderAction');
+        $document->setSubject('pd-sec-workflow-mail');
+        $document->setPublished(true);
+        $document->save();
+    }
+
+    private function removeDocument(): void
+    {
+        $existing = \Pimcore\Model\Document::getByPath('/' . self::DOCUMENT_KEY);
+
+        if ($existing instanceof \Pimcore\Model\Document) {
+            $existing->delete();
+        }
     }
 
     private function routerContext(): \Symfony\Component\Routing\RequestContext

@@ -8,6 +8,7 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 #[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
 final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
 {
+    use \Portadesign\PimcoreSecurityPatches\Tests\Support\MailCapture;
     use \Portadesign\PimcoreSecurityPatches\Tests\Support\MainDomainFixture;
 
     private const USERNAME = 'pd-sec-lostpassword-user';
@@ -24,13 +25,6 @@ final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
     private array $originalTrustedProxies = [];
 
     private int $originalTrustedHeaderSet = 0;
-
-    /**
-     * @var list<array{body: string, recipients: list<string>}>
-     */
-    private array $sentMails = [];
-
-    private ?\Closure $mailListener = null;
 
     protected function setUp(): void
     {
@@ -51,28 +45,12 @@ final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
             'password' => password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT),
             'active' => true,
         ]);
-
-        $this->sentMails = [];
-        $this->mailListener = function (\Pimcore\Event\Model\MailEvent $event): void {
-            $mail = $event->getMail();
-            $this->sentMails[] = [
-                'body' => str_replace("\r\n", "\n", (string) $mail->getTextBody()),
-                'recipients' => array_map(
-                    static fn (\Symfony\Component\Mime\Address $address): string => $address->getAddress(),
-                    $mail->getTo(),
-                ),
-            ];
-            $mail->disableLogging();
-            $event->setArguments([]);
-        };
-        \Pimcore::getEventDispatcher()->addListener(\Pimcore\Event\MailEvents::PRE_SEND, $this->mailListener, 1000);
+        $this->startCapturingMails();
     }
 
     protected function tearDown(): void
     {
-        if (null !== $this->mailListener) {
-            \Pimcore::getEventDispatcher()->removeListener(\Pimcore\Event\MailEvents::PRE_SEND, $this->mailListener);
-        }
+        $this->stopCapturingMails();
 
         \Symfony\Component\HttpFoundation\Request::setTrustedProxies($this->originalTrustedProxies, $this->originalTrustedHeaderSet);
         $this->restoreDomain();
@@ -120,7 +98,7 @@ final class LostPasswordMailTest extends \PHPUnit\Framework\TestCase
         $this->assertCount(1, $this->sentMails, 'exactly one reset mail must be sent');
         $this->assertSame(['lostpassword-recipient@example.test'], $this->sentMails[0]['recipients']);
 
-        $body = $this->sentMails[0]['body'];
+        $body = $this->sentMails[0]['text'];
         $token = $this->extractToken($body);
 
         $this->assertSame(
