@@ -143,7 +143,7 @@
                 {
                     "description": "PD-2026-008 (no CVE): mail parameters are not evaluated as Twig by the document, HTML and plain text render passes",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-PD-2026-008-mail-document-params.patch",
-                    "sha256": "c3376047d59a2088bffff87c46683ba8f51c6a3ac3cbcec3d132e186ff3d35f9"
+                    "sha256": "5580bd0a9cefa6fa754da7c6a02741f251be3caca7834dea32b25128d4ca0f0c"
                 }
             ],
             "pimcore/admin-ui-classic-bundle": [

@@ -7,7 +7,33 @@ namespace Portadesign\PimcoreSecurityPatches\Tests;
 #[\PHPUnit\Framework\Attributes\Group('CVE-2026-115890')]
 final class FieldCollectionJoinTest extends \PHPUnit\Framework\TestCase
 {
-    private const COLLECTION = 'DataQualityFieldDefinition';
+    private const COLLECTION = 'PdSecJoinCollection';
+
+    private const CLASS_NAME = 'PdSecJoinHost';
+
+    public static function setUpBeforeClass(): void
+    {
+        self::removeFixtures();
+
+        $definition = new \Pimcore\Model\DataObject\Fieldcollection\Definition();
+        $definition->setKey(self::COLLECTION);
+        $definition->setLayoutDefinitions((new \Pimcore\Model\DataObject\ClassDefinition\Layout\Panel())->setName('layout'));
+        $definition->save();
+
+        $class = new \Pimcore\Model\DataObject\ClassDefinition();
+        $class->setName(self::CLASS_NAME);
+        $class->setUserOwner(0);
+        $field = new \Pimcore\Model\DataObject\ClassDefinition\Data\Fieldcollections();
+        $field->setName('items');
+        $field->setAllowedTypes([self::COLLECTION]);
+        $class->setLayoutDefinitions((new \Pimcore\Model\DataObject\ClassDefinition\Layout\Panel())->setName('root')->setChildren([$field]));
+        $class->save();
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        self::removeFixtures();
+    }
 
     /**
      * @return array<string, array{string}>
@@ -52,7 +78,7 @@ final class FieldCollectionJoinTest extends \PHPUnit\Framework\TestCase
 
     private function joinSql(?string $fieldname): string
     {
-        $listing = new \Pimcore\Model\DataObject\DataQualityConfig\Listing();
+        $listing = new \Pimcore\Model\DataObject\PdSecJoinHost\Listing();
         $listing->addFieldCollection(self::COLLECTION, $fieldname);
         $dao = $listing->getDao();
         \assert($dao instanceof \Pimcore\Model\DataObject\Listing\Concrete\Dao);
@@ -62,5 +88,20 @@ final class FieldCollectionJoinTest extends \PHPUnit\Framework\TestCase
         (new \ReflectionMethod($dao, 'applyJoins'))->invoke($dao, $queryBuilder);
 
         return $queryBuilder->getSQL();
+    }
+
+    private static function removeFixtures(): void
+    {
+        $class = \Pimcore\Model\DataObject\ClassDefinition::getByName(self::CLASS_NAME);
+
+        if ($class instanceof \Pimcore\Model\DataObject\ClassDefinition) {
+            $class->delete();
+        }
+
+        $definition = \Pimcore\Model\DataObject\Fieldcollection\Definition::getByKey(self::COLLECTION);
+
+        if ($definition instanceof \Pimcore\Model\DataObject\Fieldcollection\Definition) {
+            $definition->delete();
+        }
     }
 }

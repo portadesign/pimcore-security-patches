@@ -75,6 +75,17 @@ final class EmbedEditableTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('https://example.com/page?a=1&amp;b=2', $html);
     }
 
+    public function testProviderUrlStillEmbedsWithoutNetworkAccess(): void
+    {
+        $embed = $this->embed('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+        $embed->setConfig(['fake_responses' => \Embera\Embera::ONLY_FAKE_RESPONSES]);
+
+        $html = (string) $embed->frontend();
+
+        $this->assertStringContainsString('<iframe', $html);
+        $this->assertStringContainsString('youtube.com/embed/dQw4w9WgXcQ', $html);
+    }
+
     public function testEmptyUrlProducesNoOutput(): void
     {
         $this->assertSame('', $this->frontend(''));

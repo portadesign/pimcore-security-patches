@@ -1,10 +1,10 @@
 ID: PD-2026-008 (no public advisory, Portadesign hardening)
 Package: pimcore/pimcore
 Verified: 11.5.4, 11.5.14.1
-Summary: Mail::send() and getBodyHtmlRendered() rendered mail content as a Twig template more than once: an email document is rendered with the mail parameters and the result is rendered again, and the plain text part was derived from the already rendered HTML through a third pass. A parameter holding template syntax (newsletter subscriber first name in confirmation and newsletter mails) was executed. The document is now rendered with "{" in string parameters masked, the mask becomes &#123; (%7B URL-encoded, \u007b JSON-encoded) before the second pass, and the plain text part is converted from the rendered HTML without another pass. The second pass still receives the real parameters, so placeholders written by editors keep working.
+Summary: Mail::send() and getBodyHtmlRendered() rendered mail content as a Twig template more than once: an email document is rendered with the mail parameters and the result is rendered again, and the plain text part was derived from the already rendered HTML through a third pass. A parameter holding template syntax (newsletter subscriber first name in confirmation and newsletter mails, directly or through a getter of an object parameter, escaped or not) was executed. After the document render every {{ }}, {% %} and {# #} start that is not part of a snippet found in the document's own editables is encoded as &#123;, so only placeholders written by editors reach the second pass, which still receives the real parameters. Placeholders inside other documents embedded by the template (snippets, renderlets) are no longer evaluated. The plain text part is converted from the rendered HTML without another pass.
 
 diff --git a/lib/Mail.php b/lib/Mail.php
-index 58a4389..430842c 100644
+index 58a4389..485708c 100644
 --- a/lib/Mail.php
 +++ b/lib/Mail.php
 @@ -429,11 +429,14 @@ class Mail extends Email
@@ -23,7 +23,7 @@ index 58a4389..430842c 100644
          if ($bodyTextRendered) {
              //add mime part for plain text body
              $this->text($bodyTextRendered);
-@@ -594,6 +597,52 @@ class Mail extends Email
+@@ -594,6 +597,77 @@ class Mail extends Email
          return $recipients;
      }
  
@@ -56,39 +56,63 @@ index 58a4389..430842c 100644
 +        }
 +    }
 +
-+    private const TEMPLATE_SYNTAX_MASK = "\u{E000}";
++    private const TEMPLATE_SYNTAX_PATTERN = '/\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}/s';
 +
-+    /**
-+     * @param array<array-key, mixed> $params
-+     *
-+     * @return array<array-key, mixed>
-+     */
-+    private function maskTemplateSyntax(array $params): array
++    private function neutralizeForeignTemplateSyntax(string $html, Model\Document\Email $document): string
 +    {
-+        return array_map(
-+            fn (mixed $value): mixed => is_array($value)
-+                ? $this->maskTemplateSyntax($value)
-+                : (is_string($value) ? str_replace('{', self::TEMPLATE_SYNTAX_MASK, $value) : $value),
-+            $params
++        $allowed = [];
++        $collect = static function (mixed $value) use (&$collect, &$allowed): void {
++            if (is_array($value)) {
++                foreach ($value as $item) {
++                    $collect($item);
++                }
++
++                return;
++            }
++
++            if (!is_string($value)) {
++                return;
++            }
++
++            foreach ([$value, html_entity_decode($value, ENT_QUOTES | ENT_HTML5)] as $text) {
++                if (preg_match_all(self::TEMPLATE_SYNTAX_PATTERN, $text, $matches) > 0) {
++                    foreach ($matches[0] as $snippet) {
++                        $allowed[$snippet] = true;
++                    }
++                }
++            }
++        };
++
++        foreach ($document->getEditables() as $editable) {
++            $collect($editable->getData());
++        }
++
++        $snippets = array_keys($allowed);
++        usort($snippets, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
++        $pattern = '/' . implode('|', array_map(static fn (string $snippet): string => preg_quote($snippet, '/'), $snippets)) . ($snippets === [] ? '' : '|') . '\{(?=[{%#])/';
++
++        return (string) preg_replace_callback(
++            $pattern,
++            static fn (array $match): string => $match[0] === '{' ? '&#123;' : $match[0],
++            $html
 +        );
 +    }
 +
      private function renderParams(string $string, string $context): string
      {
          $templatingEngine = Pimcore::getContainer()->get('pimcore.templating.engine.delegating');
-@@ -664,9 +713,8 @@ class Mail extends Email
+@@ -664,9 +738,7 @@ class Mail extends Email
          if (!$html) {
              // render document
              if ($this->getDocument() instanceof Model\Document) {
 -                $attributes = $this->getParams();
 -
 -                $html = Model\Document\Service::render($this->getDocument(), $attributes);
-+                $html = Model\Document\Service::render($this->getDocument(), $this->maskTemplateSyntax($this->getParams()));
-+                $html = str_replace([self::TEMPLATE_SYNTAX_MASK, rawurlencode(self::TEMPLATE_SYNTAX_MASK), '\\ue000'], ['&#123;', '%7B', '\\u007b'], $html);
++                $html = $this->neutralizeForeignTemplateSyntax(Model\Document\Service::render($this->getDocument(), $this->getParams()), $this->getDocument());
              }
          }
  
-@@ -699,22 +747,7 @@ class Mail extends Email
+@@ -699,22 +771,7 @@ class Mail extends Email
          } else {
              //creating text version from html email
              try {

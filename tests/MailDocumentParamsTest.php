@@ -51,6 +51,19 @@ final class MailDocumentParamsTest extends \PHPUnit\Framework\TestCase
         $this->assertPayloadStaysLiteral($payload, $this->sentMails[0]['html'], $this->sentMails[0]['text']);
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('payloadProvider')]
+    public function testGetterOutputOfTheObjectParameterIsNotEvaluated(string $payload): void
+    {
+        $document = $this->createDocument(\Pimcore\Model\Document\Email::class);
+
+        $this->newsletter()->sendConfirmationMail($this->subscriber($payload, 'Smith'), $document, ['firstname' => 'Max']);
+
+        $html = $this->sentMails[0]['html'];
+        $this->assertStringContainsString('Hello Max', $html);
+        $this->assertStringContainsString('Object ', $html);
+        $this->assertPayloadStaysLiteral($payload, $html, $this->sentMails[0]['text']);
+    }
+
     public function testConfirmationMailKeepsTheEditorPlaceholders(): void
     {
         $document = $this->createDocument(\Pimcore\Model\Document\Email::class);
@@ -175,6 +188,7 @@ final class MailDocumentParamsTest extends \PHPUnit\Framework\TestCase
         $document->setKey(self::KEY);
         $document->setController(self::CONTROLLER);
         $document->setSubject('pd-sec-mail-params');
+        $document->setEditables(['greeting' => (new \Pimcore\Model\Document\Editable\Input())->setName('greeting')->setDataFromEditmode('Editor placeholder {{ lastname }}')]);
         $document->setPublished(true);
         $document->save();
 
