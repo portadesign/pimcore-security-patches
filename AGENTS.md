@@ -51,7 +51,7 @@ Every patch is an independent implementation. The inputs were the public advisor
 
 ## Open items
 
-1. P5 (login, accounts, admin XSS: PDF preview, account mails) is not merged yet. The PDF preview response must set the request attribute `_pimcore_own_csp` (honoured by `AdminSecurityListener` through the image editor CSP patch) so the generic admin CSP does not overwrite its own policy.
+1. The PDF preview (CVE-2023-46722) sets the request attribute `_pimcore_own_csp`, honoured by `AdminSecurityListener` through the image editor CSP patch: the P5 PDF patch needs the P6 CSP patch applied first (composer order).
 2. `composer.json` conflict range allows unverified enterprise releases of 10.6.9+ below 10.7; the VEX lists only 10.6.9. Verify the others with `verify.sh` or narrow the range.
 3. If cweagans is not active (not allowed, or 1.x) the plugin returns silently; print an error. Matters more here, as Pimcore 10 projects often start on 1.x.
 4. The child `install` dumps a non-optimized autoloader over the parent's `-o`/`-a` one and runs under Composer's 300 s process timeout.
@@ -59,7 +59,7 @@ Every patch is an independent implementation. The inputs were the public advisor
 6. `bundles/AdminBundle/Helper/QueryParams.php:122` concatenates `$f->property` unquoted in its date branch; nothing in 10.6.9 calls `QueryParams::getFilterCondition()`, so it is not patched. Project code calling it stays exposed.
 7. Document-based mails render their output a second time by design; tracked internally.
 8. CVE-2026-45162: deeply nested pricing `Bracket` conditions in a stored rule can exhaust resources when loaded (allowlist does not bound depth); `Serialize::unserializeSubtypes()` autoloads identifier-shaped class names found in the stored data, so any autoloadable class name is loaded (never instantiated unless it extends an allowed base type).
-9. Browser behaviour is verified manually only: the image editor CSP (GHSA-jmh9-6rjq-gjh9) and, once P5 is merged, the PDF preview. The tests assert the response headers. The minipaint jQuery probe (`tests/js`, run by `MinipaintJqueryTest` and `verify.sh`) skips without `node`, so a host or CI without node does not run it.
+9. Browser behaviour is verified manually only: the image editor CSP (GHSA-jmh9-6rjq-gjh9) and the PDF preview (CSP and nosniff in the native PDF viewers of Chrome, Firefox, Safari). The tests assert the response headers. The minipaint jQuery probe (`tests/js`, run by `MinipaintJqueryTest` and `verify.sh`) skips without `node`, so a host or CI without node does not run it.
 10. Characterisation tests that cannot fail against the patches: signed-length payloads in `tests/Support/RejectedSerializedPayloads.php`, the `testControl*` cases by design.
 11. CVE-2026-45260: with `delete` but without `rename`, an overwrite whose destination was already deleted by Sabre and whose delete-log entry is lost ends as a rename of the source onto the destination path (authorised by the `beforeMove` decision). A cross-folder move to a free but different name still lands under the source name (core behaviour).
 

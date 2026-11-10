@@ -147,7 +147,7 @@
             "pksa": null,
             "status": "hardening",
             "package": "pimcore/pimcore",
-            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch",
+            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch, patches/pimcore-PD-2026-002-account-mails.patch",
             "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
         },
         {
@@ -282,6 +282,87 @@
             "justification": "vulnerable_code_not_present",
             "impact": "The route /admin/login/2fa-setup does not exist in 10.6.9; bundles/AdminBundle/Controller/Admin/LoginController.php:315 (/login/2fa) renders only the message of a session AuthenticationException (:326-330), never a request parameter.",
             "reason": "CVE-2023-37280 not affected: the vulnerable 2FA setup route does not exist in pimcore/pimcore 10.6.9"
+        },
+        {
+            "cve": "CVE-2024-23648",
+            "pksa": "GHSA-mrqg-mwh7-q94j",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2024-23648-host-header-links.patch",
+            "reason": "CVE-2024-23648 fixed by portadesign/pimcore-security-patches",
+            "notes": "Link built on general.domain, or on the request host (without its own port; port only from a trusted proxy's X-Forwarded-Port) when framework.trusted_hosts is set; no link without either."
+        },
+        {
+            "cve": "CVE-2024-25625",
+            "pksa": "GHSA-3qpq-6w89-f7mx",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2024-23648-host-header-links.patch",
+            "reason": "CVE-2024-25625 fixed by portadesign/pimcore-security-patches",
+            "notes": "Invitation link and mail subject use the same trusted host; the failure message names the missing general.domain. getTokenLoginLinkAction returns its link only to the requesting admin and is unchanged."
+        },
+        {
+            "cve": "CVE-2025-24980",
+            "pksa": "GHSA-vr5f-php7-rg24",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2025-24980-lostpassword-enumeration.patch",
+            "reason": "CVE-2025-24980 fixed by portadesign/pimcore-security-patches",
+            "notes": "Status, body and rate-limit behaviour no longer depend on whether the username exists. Response timing is not equalised: a mail is sent only for valid accounts."
+        },
+        {
+            "cve": "CVE-2023-5844",
+            "pksa": "GHSA-6f58-j323-6472",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2023-5844-password-reuse.patch",
+            "reason": "CVE-2023-5844 fixed by portadesign/pimcore-security-patches",
+            "notes": "New password equal to the current one is rejected, with old password and with reset token."
+        },
+        {
+            "cve": "CVE-2025-30166",
+            "pksa": "GHSA-x82r-6j37-vrgg",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2025-30166-test-mail-html.patch",
+            "reason": "CVE-2025-30166 fixed by portadesign/pimcore-security-patches",
+            "notes": "HTML test-mail content is sanitized (forms, controls, scripts, style, frames, comments, event handlers, script URLs, risky style attributes removed) and text/html test mails are sent without template rendering."
+        },
+        {
+            "cve": "CVE-2023-46722",
+            "pksa": "GHSA-jfxw-6c5v-c42f",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2023-46722-pdf-preview-headers.patch",
+            "reason": "CVE-2023-46722 fixed by portadesign/pimcore-security-patches",
+            "notes": "PDF preview sent inline with X-Content-Type-Options: nosniff and Content-Security-Policy: script-src 'none' (limited to directives that cannot break the native viewers; the admin CSP listener is told to keep it via _pimcore_own_csp, requires the minipaint CSP patch). Browser behaviour is not covered by a PHP test; manual viewer check pending."
+        },
+        {
+            "cve": "CVE-2023-5873",
+            "pksa": "GHSA-j59v-hh4p-q92m",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2023-46722-pdf-preview-headers.patch",
+            "reason": "CVE-2023-5873 fixed by portadesign/pimcore-security-patches",
+            "notes": "Same patch as CVE-2023-46722: PDF preview served with nosniff and a script-src 'none' policy."
+        },
+        {
+            "cve": "CVE-2023-42817",
+            "pksa": "GHSA-m988-7375-7g2c",
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2023-42817-sprintf.patch",
+            "reason": "CVE-2023-42817 fixed by portadesign/pimcore-security-patches",
+            "notes": "sprintf() substitutes in a single pass; requires assets:install to reach public/bundles/pimcoreadmin."
+        },
+        {
+            "cve": "CVE-2023-47636",
+            "pksa": "GHSA-c8hj-w239-5gvf",
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "The advisory's fopen() of var/tmp/export-<id>.csv has no counterpart in 10.6.9: grid exports use the storage API (AssetHelperController.php:727, DataObjectHelperController.php:1335) and the report export opens its file with mode a+ (CustomReportController.php:480). The related hardening of error messages carrying absolute paths is PD-2026-004.",
+            "reason": "CVE-2023-47636 not affected: the vulnerable export file handling does not exist in pimcore/pimcore 10.6.9; related hardening is PD-2026-004"
         }
     ]
 }

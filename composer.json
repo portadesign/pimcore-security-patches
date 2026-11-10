@@ -189,6 +189,41 @@
                     "description": "GHSA-jmh9-6rjq-gjh9: Content-Security-Policy for the image editor response, inline handlers only by hash (CVE-2020-11022, CVE-2020-11023)",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-csp.patch",
                     "sha256": "e6134a61a962f3dc248efb81f818a9f5d5e568f7dee9e1038e7ba41fd0a8fe01"
+                },
+                {
+                    "description": "CVE-2024-23648, CVE-2024-25625: reset and invitation links built on general.domain",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2024-23648-host-header-links.patch",
+                    "sha256": "e0972c8c4d572d4b2a2a1ff0b6b2046f10fb037c64ca4664e7ce5da178e87414"
+                },
+                {
+                    "description": "CVE-2025-24980: neutral lost-password answer",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2025-24980-lostpassword-enumeration.patch",
+                    "sha256": "2e60cf285db0028aabb613ff615f4140ce3930159435ea84b3defa124db2ee94"
+                },
+                {
+                    "description": "CVE-2023-5844: reject unchanged password",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-5844-password-reuse.patch",
+                    "sha256": "539d8ce427cc55a616d5810e641f585414a9417a1fe278442f58afa44d6dcf1a"
+                },
+                {
+                    "description": "CVE-2025-30166: sanitize HTML of the admin test mail",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2025-30166-test-mail-html.patch",
+                    "sha256": "13ea765dd130e0a6c65a365505791523d84e2aa2c61b3b2129d53dec31135054"
+                },
+                {
+                    "description": "CVE-2023-46722, CVE-2023-5873: PDF preview response headers",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-46722-pdf-preview-headers.patch",
+                    "sha256": "531618db050a3ca1ce42a811e0c41744ddb1e38f27b260ba059967e9c3b875e7"
+                },
+                {
+                    "description": "CVE-2023-42817: single-pass sprintf in admin JS",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-42817-sprintf.patch",
+                    "sha256": "86925dead9d0ce05b37f104593f94648aa3712e58bee89cfa2075d458a3d8494"
+                },
+                {
+                    "description": "PD-2026-002: account mails sent without template rendering (apply after the Mail::sendWithoutRendering patch)",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-002-account-mails.patch",
+                    "sha256": "1cddb61f936d62e31d2b3b4626d1d4a751b218a90b1d959d1c7b11b3cffaaec6"
                 }
             ]
         }
