@@ -63,7 +63,7 @@
                 {
                     "description": "CVE-2026-11407: Twig sandbox bypass and reachable model getters",
                     "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v1.0.3/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
-                    "sha256": "5373055b9464a6e2b343180a31a0668f4ec6cd7accb8a36ba17204e147c24ed6"
+                    "sha256": "503114244bffe6315e7e78aa098947c4c037f78d6df78f6d0fc8bedb06a6a700"
                 },
                 {
                     "description": "CVE-2026-5394: SQL injection in composite indexes",
