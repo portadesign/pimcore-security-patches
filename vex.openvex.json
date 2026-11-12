@@ -1,11 +1,11 @@
 {
     "@context": "https://openvex.dev/ns/v0.2.0",
-    "@id": "https://github.com/portadesign/pimcore-11-security-patches/vex.openvex.json",
+    "@id": "https://github.com/portadesign/pimcore-security-patches/vex.openvex.json",
     "author": "Portadesign",
-    "timestamp": "2026-11-11T06:52:17Z",
-    "last_updated": "2026-11-11T06:52:17Z",
-    "version": 7,
-    "tooling": "pimcore-security-patches v11.5.0",
+    "timestamp": "2026-11-12T11:49:19Z",
+    "last_updated": "2026-11-12T11:49:19Z",
+    "version": 8,
+    "tooling": "pimcore-security-patches v11.5.1",
     "statements": [
         {
             "vulnerability": {
