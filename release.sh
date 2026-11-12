@@ -68,10 +68,10 @@ done
 
 step "pin patch URLs to ${tag}, sync sha256"
 if [ "$dry_run" = 1 ]; then
-  echo "[dry-run] sed raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v*/ -> ${tag}/ in composer.json"
+  echo "[dry-run] sed raw.githubusercontent.com/portadesign/pimcore-security-patches/v*/ -> ${tag}/ in composer.json"
   echo "[dry-run] php bin/sync-patch-hashes.php"
 else
-  sed -i.bak -E "s#(raw.githubusercontent.com/portadesign/pimcore-11-security-patches/)v[0-9]+\.[0-9]+\.[0-9]+/#\1${tag}/#" composer.json
+  sed -i.bak -E "s#raw.githubusercontent.com/portadesign/pimcore(-11)?-security-patches/v[0-9]+\.[0-9]+\.[0-9]+/#raw.githubusercontent.com/portadesign/pimcore-security-patches/${tag}/#" composer.json
   rm composer.json.bak
   php bin/sync-patch-hashes.php
 fi

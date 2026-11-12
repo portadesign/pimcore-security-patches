@@ -10,7 +10,7 @@ Public GitHub repository, not on Packagist. Installation is documented in `READM
 
 ## Lines, branches, name
 
-- Package `portadesign/pimcore-security-patches` (namespace `Portadesign\PimcoreSecurityPatches`). It replaces `portadesign/pimcore-11-security-patches`, whose tags v1.0.0–v1.0.3 stay untouched. The GitHub repository is still `portadesign/pimcore-11-security-patches`; patch URLs and the VEX `@id` use that path until the owner renames it.
+- Package `portadesign/pimcore-security-patches` (namespace `Portadesign\PimcoreSecurityPatches`). It replaces `portadesign/pimcore-11-security-patches`, whose tags v1.0.0–v1.0.3 stay untouched. The GitHub repository was renamed to `portadesign/pimcore-security-patches` on 2026-11-12; GitHub redirects the old path, which v11.5.0 still uses in its patch URLs and VEX `@id`.
 - Versioned like Pimcore: one branch and one tag series per Pimcore line. Branch `11.5` (Pimcore 11.5.x, admin-ui-classic-bundle 1.7.x) releases `v11.5.<n>`; branch `10.6` (Pimcore 10.6.x, PHP 8.1) releases `v10.6.<n>`. A project requires `^11.5` or `^10.6`. `conflict` in each branch's `composer.json` pins its line. The 10.6 line exists; its patch list follows and is documented on that branch.
 - `main` follows the newest line by fast-forward. A fix that applies to several lines is made per branch, not merged across: patches, tests and manifests differ per line.
 - The `.github/workflows/verify.yml` matrix is per branch (the versions of that line). Scheduled workflows run only on the default branch, so the weekly run covers the line `main` points to.

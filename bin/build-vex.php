@@ -94,7 +94,7 @@ $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | J
 
 file_put_contents(filename: $vexPath, data: json_encode(value: [
     '@context' => 'https://openvex.dev/ns/v0.2.0',
-    '@id' => 'https://github.com/portadesign/pimcore-11-security-patches/vex.openvex.json',
+    '@id' => 'https://github.com/portadesign/pimcore-security-patches/vex.openvex.json',
     'author' => 'Portadesign',
     'timestamp' => $timestamp,
     'last_updated' => $timestamp,

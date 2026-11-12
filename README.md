@@ -7,7 +7,7 @@ Security patches for `pimcore/pimcore` 11.5.4–11.5.14.1 and `pimcore/admin-ui-
 Needs Composer 2 and PHP ≥ 8.2. Not on Packagist.
 
 ```bash
-composer config repositories.pimcore-11-security-patches vcs https://github.com/portadesign/pimcore-11-security-patches
+composer config repositories.pimcore-security-patches vcs https://github.com/portadesign/pimcore-security-patches
 composer config allow-plugins.cweagans/composer-patches true
 composer config allow-plugins.portadesign/pimcore-security-patches true
 composer require portadesign/pimcore-security-patches:^11.5
