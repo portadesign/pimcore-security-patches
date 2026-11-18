@@ -147,8 +147,8 @@
             "pksa": null,
             "status": "hardening",
             "package": "pimcore/pimcore",
-            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch, patches/pimcore-PD-2026-002-account-mails.patch",
-            "reason": "PD-2026-002: no public advisory; mails built from finished or stored content sent without template rendering, Portadesign hardening, not listed in the VEX"
+            "patch": "patches/pimcore-PD-2026-002-mail-rendering.patch",
+            "reason": "PD-2026-002: no public advisory; resent logged mails, the log summary mail and workflow notification template mails sent without template rendering, Portadesign hardening, not listed in the VEX"
         },
         {
             "cve": "PD-2026-005",
@@ -363,6 +363,74 @@
             "justification": "vulnerable_code_not_present",
             "impact": "The advisory's fopen() of var/tmp/export-<id>.csv has no counterpart in 10.6.9: grid exports use the storage API (AssetHelperController.php:727, DataObjectHelperController.php:1335) and the report export opens its file with mode a+ (CustomReportController.php:480). The related hardening of error messages carrying absolute paths is PD-2026-004.",
             "reason": "CVE-2023-47636 not affected: the vulnerable export file handling does not exist in pimcore/pimcore 10.6.9; related hardening is PD-2026-004"
+        },
+        {
+            "cve": "CVE-2026-115898",
+            "ghsa": "GHSA-hf99-42jw-j5hp",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-115898-reset-mail-rendering.patch, patches/pimcore-CVE-2026-115898-workflow-deeplink.patch",
+            "notes": "GHSA-hf99-42jw-j5hp. Pimcore Studio is not part of 10.6; the equivalent paths are the admin lost-password mail, the user invitation mail and the workflow notification deeplink, which carry the request-derived router base URL (X-Forwarded-Prefix behind a trusted proxy). Workflow notification template mails are sent without rendering by PD-2026-002. Host, X-Forwarded-Host, port and scheme cannot carry template syntax (Symfony rejects the host, the port is cast to int).",
+            "reason": "CVE-2026-115898 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-115891",
+            "ghsa": "GHSA-9gh3-v84c-qhv4",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-115891-notification-filter.patch",
+            "notes": "SQL injection through the property of /admin/notification/find-all filters; only title and date are accepted.",
+            "reason": "CVE-2026-115891 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-115890",
+            "ghsa": "GHSA-h25j-rvrm-527g",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-115890-listing-fieldcollection-join.patch",
+            "notes": "SQL injection through the field collection name in the data object listing JOIN; the name is quoted as a string literal. No 10.6.9 core caller passes request data to Listing\\Concrete::addFieldCollection(), so this is reachable only through custom code.",
+            "reason": "CVE-2026-115890 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-5362",
+            "ghsa": "GHSA-7gxw-q9j5-mrj4",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-5362-embed-editable-xss.patch",
+            "notes": "The advisory lists only 12.3.3, but the Embed editable of 10.6.9 echoed any stored value as markup (Embera autoEmbed returns text around URLs unchanged). The editable now outputs a single http(s) URL only and escapes URLs no provider recognises.",
+            "reason": "CVE-2026-5362 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-115894",
+            "ghsa": "GHSA-7gfm-v2fx-xrxm",
+            "pksa": null,
+            "status": "fixed",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
+            "notes": "GHSA-7gfm-v2fx-xrxm. Model getters reachable from sandboxed Twig (user.getPassword(), pimcore_user(1).getPassword(), asset.getData()) are blocked by the same sandbox policy as CVE-2026-11407; see tests/TwigSandboxTest.php.",
+            "reason": "CVE-2026-115894 fixed by portadesign/pimcore-security-patches"
+        },
+        {
+            "cve": "CVE-2026-58401",
+            "ghsa": "GHSA-46p3-pxr2-m4j9",
+            "pksa": null,
+            "status": "not_affected",
+            "package": "pimcore/pimcore",
+            "justification": "vulnerable_code_not_present",
+            "impact": "The advisory concerns Authentication::safelyUnserialize(), which does not exist in 10.6.9 (affected range starts at 11.0.0). lib/Tool/Authentication.php:79 reads the user attribute of the read-only admin session (:78), accepts it only as Pimcore\\Model\\User (:81) and reloads it by id (:83); no Pimcore code deserialises a session token string.",
+            "reason": "CVE-2026-58401 not affected: pimcore/pimcore 10.6.9 has no Authentication::safelyUnserialize()"
+        },
+        {
+            "cve": "PD-2026-008",
+            "pksa": null,
+            "status": "hardening",
+            "package": "pimcore/pimcore",
+            "patch": "patches/pimcore-PD-2026-008-mail-document-params.patch",
+            "reason": "PD-2026-008: no public advisory; mail parameters are not evaluated as Twig by the document, HTML and plain text render passes (newsletter confirmation and newsletter mails, workflow notification document mails), Portadesign hardening, not listed in the VEX"
         }
     ]
 }

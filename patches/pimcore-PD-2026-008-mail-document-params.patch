@@ -1,0 +1,141 @@
+ID: PD-2026-008 (no public advisory, Portadesign hardening)
+Package: pimcore/pimcore
+Verified: 10.6.9
+Summary: Mail::send() and getBodyHtmlRendered() rendered mail content as a Twig template more than once: an email or newsletter document is rendered with the mail parameters and the result is rendered again, and the plain text part was derived from the already rendered HTML through a third pass. A parameter holding template syntax (newsletter subscriber first name in confirmation and newsletter mails, the workflow notification deeplink, directly or through a getter of an object parameter, escaped or not) was executed. After the document render every {{ }}, {% %} and {# #} start that is not part of a snippet found in the document's own editables is encoded as &#123;, so only placeholders written by editors reach the second pass, which still receives the real parameters. Placeholders inside other documents embedded by the template (snippets, renderlets) are no longer evaluated. The plain text part is converted from the rendered HTML without another pass. Requires the CVE-2026-11407 and PD-2026-005 patches.
+
+diff --git a/lib/Mail.php b/lib/Mail.php
+index 2d673b2b..26f32a0e 100644
+--- a/lib/Mail.php
++++ b/lib/Mail.php
+@@ -483,11 +483,14 @@ class Mail extends Email
+     public function send(MailerInterface $mailer = null)
+     {
+         $bodyHtmlRendered = $this->getBodyHtmlRendered();
++        $bodyTextRendered = $this->getTextBody()
++            ? $this->getBodyTextRendered()
++            : $this->convertHtmlToText($bodyHtmlRendered);
++
+         if ($bodyHtmlRendered) {
+             $this->html($bodyHtmlRendered);
+         }
+ 
+-        $bodyTextRendered = $this->getBodyTextRendered();
+         if ($bodyTextRendered) {
+             //add mime part for plain text body
+             $this->text($bodyTextRendered);
+@@ -647,6 +650,77 @@ class Mail extends Email
+         return $recipients;
+     }
+ 
++    private function convertHtmlToText(?string $htmlContent): string
++    {
++        if (!$htmlContent) {
++            return '';
++        }
++
++        try {
++            $html = new DomCrawler($htmlContent);
++
++            $body = $html->filter('body')->eq(0);
++            if ($body->count()) {
++                $style = $body->filter('style')->eq(0);
++                if ($style->count()) {
++                    $style->clear();
++                }
++                $htmlContent = $body->html();
++            }
++
++            $html->clear();
++            unset($html);
++
++            return (string) $this->html2Text($htmlContent);
++        } catch (\Exception $e) {
++            Logger::err((string) $e);
++
++            return '';
++        }
++    }
++
++    private const TEMPLATE_SYNTAX_PATTERN = '/\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}/s';
++
++    private function neutralizeForeignTemplateSyntax(string $html, Model\Document\PageSnippet $document): string
++    {
++        $allowed = [];
++        $collect = static function (mixed $value) use (&$collect, &$allowed): void {
++            if (is_array($value)) {
++                foreach ($value as $item) {
++                    $collect($item);
++                }
++
++                return;
++            }
++
++            if (!is_string($value)) {
++                return;
++            }
++
++            foreach ([$value, html_entity_decode($value, ENT_QUOTES | ENT_HTML5)] as $text) {
++                if (preg_match_all(self::TEMPLATE_SYNTAX_PATTERN, $text, $matches) > 0) {
++                    foreach ($matches[0] as $snippet) {
++                        $allowed[$snippet] = true;
++                    }
++                }
++            }
++        };
++
++        foreach ($document->getEditables() as $editable) {
++            $collect($editable->getData());
++        }
++
++        $snippets = array_keys($allowed);
++        usort($snippets, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
++        $pattern = '/' . implode('|', array_map(static fn (string $snippet): string => preg_quote($snippet, '/'), $snippets)) . ($snippets === [] ? '' : '|') . '\{(?=[{%#])/';
++
++        return (string) preg_replace_callback(
++            $pattern,
++            static fn (array $match): string => $match[0] === '{' ? '&#123;' : $match[0],
++            $html
++        );
++    }
++
+     /**
+      * @param string $string
+      * @param string $context
+@@ -709,11 +783,11 @@ class Mail extends Email
+         // and not the content of the Document!
+         if (!$html) {
+             // render document
+-            if ($this->getDocument() instanceof Model\Document) {
++            if ($this->getDocument() instanceof Model\Document\PageSnippet) {
+                 $attributes = $this->getParams();
+                 $attributes[ElementListener::FORCE_ALLOW_PROCESSING_UNPUBLISHED_ELEMENTS] = true;
+ 
+-                $html = Model\Document\Service::render($this->getDocument(), $attributes);
++                $html = $this->neutralizeForeignTemplateSyntax(Model\Document\Service::render($this->getDocument(), $attributes), $this->getDocument());
+             }
+         }
+ 
+@@ -747,22 +821,7 @@ class Mail extends Email
+         } else {
+             //creating text version from html email
+             try {
+-                $htmlContent = $this->getBodyHtmlRendered();
+-                $html = new DomCrawler($htmlContent);
+-
+-                $body = $html->filter('body')->eq(0);
+-                if ($body->count()) {
+-                    $style = $body->filter('style')->eq(0);
+-                    if ($style->count()) {
+-                        $style->clear();
+-                    }
+-                    $htmlContent = $body->html();
+-                }
+-
+-                $html->clear();
+-                unset($html);
+-
+-                $content = $this->html2Text($htmlContent);
++                $content = $this->convertHtmlToText($this->getBodyHtmlRendered());
+             } catch (\Exception $e) {
+                 Logger::err((string) $e);
+                 $content = '';

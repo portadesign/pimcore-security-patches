@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Portadesign\PimcoreSecurityPatches\Tests;
 
-#[\PHPUnit\Framework\Attributes\Group('PD-2026-002')]
+#[\PHPUnit\Framework\Attributes\Group('CVE-2026-115898')]
 #[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
 final class InvitationMailTest extends \PHPUnit\Framework\TestCase
 {

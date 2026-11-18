@@ -52,178 +52,203 @@
             "pimcore/pimcore": [
                 {
                     "description": "CVE-2026-23492: admin search: brick names from fields[] validated against object brick definitions, join table and alias quoted",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-23492-search-brick-join.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-23492-search-brick-join.patch",
                     "sha256": "4599127ef4a1f266013d3208094ed850e7a1addbae30eaad18731ba06c3b060c"
                 },
                 {
                     "description": "CVE-2023-47637: multiselect grid filter value quoted and LIKE-escaped",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-47637-multiselect-filter.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2023-47637-multiselect-filter.patch",
                     "sha256": "c3b771d3934bd17c57b65a65b03c46bb6968c488b18d9d2d1d9039d1f77c5c84"
                 },
                 {
                     "description": "CVE-2025-27617: relation, image and hotspotimage grid filter value quoted and LIKE-escaped, column quoted",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2025-27617-relation-filter-condition.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2025-27617-relation-filter-condition.patch",
                     "sha256": "727f9b2720653ec896b23f31546a628f550ba6140c691ea2bb87b8c71ff9b515"
                 },
                 {
                     "description": "CVE-2026-44741: translation grid filter column allowlist, quoted table and column",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-44741-translation-grid.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-44741-translation-grid.patch",
                     "sha256": "0810be215e3d14f95d76471809f939c7e2ebf614625fef3d31ae734e60434b57"
                 },
                 {
                     "description": "CVE-2026-44739: custom report keyword guard neutralises comments and whitespace before matching",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-44739-custom-reports-sql.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-44739-custom-reports-sql.patch",
                     "sha256": "00ba5a224c8d65cae219284f42dafcb9c284058b62f3fea2c8f7b88d3eb1bfe2"
                 },
                 {
                     "description": "CVE-2026-55416: custom report fragments, identifiers and field lists validated or quoted; offset and limit cast to int",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-55416-custom-reports-sql-fragments.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-55416-custom-reports-sql-fragments.patch",
                     "sha256": "9f427496e813009dc91109b375ad4f97f7378c48c16e2040f35f30f92926b4ad"
                 },
                 {
                     "description": "PD-2026-003: select-type grid filter value quoted and LIKE-escaped",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-003-select-filter.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-003-select-filter.patch",
                     "sha256": "7e1218e1856ed930b6b187ebb2070976776c6a84a039e3324ba0ef4a998dcae4"
                 },
                 {
                     "description": "PD-2026-006: note list filter column allowlist and quoted identifier",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-006-note-list-filter.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-006-note-list-filter.patch",
                     "sha256": "841a3001622e0feb3e461e00337e92d5e2513864e959fa0cdb21ea977ead1cd2"
                 },
                 {
                     "description": "PD-2026-007: object grid classification store sort: existing field only, integer ids, quoted join alias",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-007-classificationstore-grid-sort.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-007-classificationstore-grid-sort.patch",
                     "sha256": "72dee2adba039e37a03d88b2a21357b78dfdc8b7b2605ba66512631f2ea43648"
                 },
                 {
                     "description": "CVE-2026-55634: allowlist for DataObject field names, quoted field-name DDL",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-55634-class-field-name-rce.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-55634-class-field-name-rce.patch",
                     "sha256": "ef4f06d151d290b2f045259b8b1a3f7f9425ba6e81abc00d9af474ffe401b046"
                 },
                 {
                     "description": "CVE-2026-55072: anchored class id/name checks, builder guards, quoted class-id tables",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-55072-class-definition-id-regex.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-55072-class-definition-id-regex.patch",
                     "sha256": "d6b017b425212846942015b2d11b57054f49e152348849b496f57916aa08704b"
                 },
                 {
                     "description": "CVE-2026-5394: validated and quoted composite index DDL",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-5394-composite-index-sqli.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-5394-composite-index-sqli.patch",
                     "sha256": "6a7261ecfc103ea8e6dc7424c835256691b912f715fe94667722f723a7ce18ef"
                 },
                 {
                     "description": "CVE-2026-55220: unserialize allowlists for Hotspotimage, ImageGallery, Block, Video, Site and TmpStore",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-55220-unserialize-hardening.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-55220-unserialize-hardening.patch",
                     "sha256": "17dee882b2ecb26f5706c238f49fec68de1c4ccd8225635223e40f05e6631660"
                 },
                 {
                     "description": "CVE-2026-45162: remaining unserialize allowlists and HMAC-signed session elements",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-45162-unserialize-remaining.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-45162-unserialize-remaining.patch",
                     "sha256": "df536e9903184cdde72500a52783bb3bae6affea41df9f61b1643675c02cd2b9"
                 },
                 {
                     "description": "CVE-2026-23493: HTTP error log no longer stores cookies and server variables",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-23493-http-error-log.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-23493-http-error-log.patch",
                     "sha256": "2014fe8a53bc21848b91fbae1a36269f9e9888f61b57b540fa066aaca51f1634"
                 },
                 {
                     "description": "CVE-2026-11407: Twig sandbox policy for Text layouts, mails and print, thumbnail array guard, objectTypes allowlist",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-11407-twig-sandbox.patch",
                     "sha256": "24562054b1364f69b250983a15b0d728e5b3d085fa773589d4c854da6b71259b"
                 },
                 {
                     "description": "PD-2026-002: resent logged mails, the log summary mail and workflow notification template mails sent without template rendering, mail log keeps the sent subject",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-002-mail-rendering.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-002-mail-rendering.patch",
                     "sha256": "dacf090e9749398b983afc581a0c2e79c2f6fd85073aa6daa90e68725447d164"
                 },
                 {
                     "description": "PD-2026-005: default mail sender, mail body links/files and workflow notification deeplink use the configured general.domain before the request host",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-005-mail-sender-domain.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-005-mail-sender-domain.patch",
                     "sha256": "912a7020301fe5649e0954487115cb05a64660fe61d12035f607fa37ea3659aa"
                 },
                 {
                     "description": "CVE-2026-45260, CVE-2026-45162: WebDAV MOVE missing authorization, delete-log unserialize allowlist",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-45260-webdav-move-permissions.patch",
                     "sha256": "c093d1636d331af95d189c30cfa3337d211cfcf35557751ba388239190a2d08d"
                 },
                 {
                     "description": "CVE-2026-45703: word and xliff export, export jobs skip or reject elements without view permission",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-45703-wordexport-view-permission.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-45703-wordexport-view-permission.patch",
                     "sha256": "341aeeb711c70e9e42b2143d98f4002d43e33fef836d8a69b0b285e605e5dd22"
                 },
                 {
                     "description": "CVE-2026-45704: custom report, newsletter report picker and address source enforce the sharing rule, CSV exports bound to the user",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-45704-custom-reports-share.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-45704-custom-reports-share.patch",
                     "sha256": "c1d75c4bfb452c0b04b5de24ebf8cac68bc0deac362a2990293d7e3153d2fe86"
                 },
                 {
                     "description": "CVE-2026-23494: static routes list requires the routes permission",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-23494-staticroutes-list-permission.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-23494-staticroutes-list-permission.patch",
                     "sha256": "707b2bcb85c8f37c783bd72b24c3954d47a0e4e167c2bbf58294204e858e5d82"
                 },
                 {
                     "description": "CVE-2026-23495: predefined properties list requires the predefined_properties permission",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2026-23495-predefined-properties-list-permission.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-23495-predefined-properties-list-permission.patch",
                     "sha256": "2128b4d268eea11b81882b637ebdc86a2a2a27a268105e29e4d8bde70c34301e"
                 },
                 {
                     "description": "CVE-2024-24822: tag actions require tags_configuration or tags_assignment",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2024-24822-tags-permissions.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2024-24822-tags-permissions.patch",
                     "sha256": "85785d69516dfa75d675d1540f12b049d26000fa45a83e08f61a6afe5981589f"
                 },
                 {
                     "description": "CVE-2024-41109: index statistics require system_settings",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2024-41109-statistics-permission.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2024-41109-statistics-permission.patch",
                     "sha256": "7d56a5c37ee254a5f9e87d6286f0069566e34ff82e235dbb979a5d968a182b60"
                 },
                 {
                     "description": "PD-2026-004: export download 404s name no filesystem path; XLIFF export ids validated",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-004-path-disclosure.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-004-path-disclosure.patch",
                     "sha256": "6f5ec69ecb0b4c90af440467eb01766f8c76a434992091aa0161d37c4c870d59"
                 },
                 {
                     "description": "GHSA-jmh9-6rjq-gjh9: jQuery.htmlPrefilter identity in the image editor (minipaint) bundle (CVE-2020-11022)",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-jquery.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-jquery.patch",
                     "sha256": "a64f40254f7969658b845996714f93471f7a97c027b506b3557c29d6dfcbf62e"
                 },
                 {
                     "description": "GHSA-jmh9-6rjq-gjh9: Content-Security-Policy for the image editor response, inline handlers only by hash (CVE-2020-11022, CVE-2020-11023)",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-csp.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-GHSA-jmh9-6rjq-gjh9-minipaint-csp.patch",
                     "sha256": "e6134a61a962f3dc248efb81f818a9f5d5e568f7dee9e1038e7ba41fd0a8fe01"
                 },
                 {
                     "description": "CVE-2024-23648, CVE-2024-25625: reset and invitation links built on general.domain",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2024-23648-host-header-links.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2024-23648-host-header-links.patch",
                     "sha256": "e0972c8c4d572d4b2a2a1ff0b6b2046f10fb037c64ca4664e7ce5da178e87414"
                 },
                 {
                     "description": "CVE-2025-24980: neutral lost-password answer",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2025-24980-lostpassword-enumeration.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2025-24980-lostpassword-enumeration.patch",
                     "sha256": "2e60cf285db0028aabb613ff615f4140ce3930159435ea84b3defa124db2ee94"
                 },
                 {
                     "description": "CVE-2023-5844: reject unchanged password",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-5844-password-reuse.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2023-5844-password-reuse.patch",
                     "sha256": "539d8ce427cc55a616d5810e641f585414a9417a1fe278442f58afa44d6dcf1a"
                 },
                 {
                     "description": "CVE-2025-30166: sanitize HTML of the admin test mail",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2025-30166-test-mail-html.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2025-30166-test-mail-html.patch",
                     "sha256": "13ea765dd130e0a6c65a365505791523d84e2aa2c61b3b2129d53dec31135054"
                 },
                 {
                     "description": "CVE-2023-46722, CVE-2023-5873: PDF preview response headers",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-46722-pdf-preview-headers.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2023-46722-pdf-preview-headers.patch",
                     "sha256": "531618db050a3ca1ce42a811e0c41744ddb1e38f27b260ba059967e9c3b875e7"
                 },
                 {
                     "description": "CVE-2023-42817: single-pass sprintf in admin JS",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-CVE-2023-42817-sprintf.patch",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2023-42817-sprintf.patch",
                     "sha256": "86925dead9d0ce05b37f104593f94648aa3712e58bee89cfa2075d458a3d8494"
                 },
                 {
-                    "description": "PD-2026-002: account mails sent without template rendering (apply after the Mail::sendWithoutRendering patch)",
-                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-11-security-patches/v10.6.0/patches/pimcore-PD-2026-002-account-mails.patch",
-                    "sha256": "1cddb61f936d62e31d2b3b4626d1d4a751b218a90b1d959d1c7b11b3cffaaec6"
+                    "description": "CVE-2026-115898: lost-password and invitation mails sent without template rendering (apply after the Mail::sendWithoutRendering patch)",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-115898-reset-mail-rendering.patch",
+                    "sha256": "a49d18e5e15d266b06d35089c6792f00bd6b7760c33a3987ef58241bcc842509"
+                },
+                {
+                    "description": "CVE-2026-115891: notification grid filter accepts only the title and date properties",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-115891-notification-filter.patch",
+                    "sha256": "d129ab455d59dba2f048299f990cc75b94a01de0b487a00101dad32a5933e124"
+                },
+                {
+                    "description": "CVE-2026-115890: field collection field name in the data object listing JOIN quoted as a string literal",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-115890-listing-fieldcollection-join.patch",
+                    "sha256": "4ad1fe7e98f6fe0ca443df8eeec1f7381e5feb713733b18cd460337aab1520c9"
+                },
+                {
+                    "description": "CVE-2026-5362: Embed editable outputs a single http(s) URL only and escapes URLs no provider recognises (apply after the CVE-2026-45162 patch)",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-5362-embed-editable-xss.patch",
+                    "sha256": "bf30b1959f0df50316d55790006aad5444a729b2a2163bbcf86e50bf136244f3"
+                },
+                {
+                    "description": "PD-2026-008: template syntax outside the document's own editables neutralised before the second mail render, plain text part without another pass (apply after the CVE-2026-11407 and PD-2026-005 patches)",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-PD-2026-008-mail-document-params.patch",
+                    "sha256": "5bb4c08bdc771653285ee7179a8b6d6caed223bafe421bd3b3b9e8e62d9d7b3a"
+                },
+                {
+                    "description": "CVE-2026-115898: workflow notification deeplink percent-encodes the router base URL (apply after the PD-2026-002 and PD-2026-005 patches)",
+                    "url": "https://raw.githubusercontent.com/portadesign/pimcore-security-patches/v10.6.0/patches/pimcore-CVE-2026-115898-workflow-deeplink.patch",
+                    "sha256": "35f707c0c84dec61b98e5488f237e39cc9e8b06e14ae7abe97283051c6339eb8"
                 }
             ]
         }

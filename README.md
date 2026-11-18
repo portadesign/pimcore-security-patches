@@ -7,7 +7,7 @@ Security patches for `pimcore/pimcore` 10.6.9 (Pimcore 10, PHP 8.1), applied by 
 Needs Composer 2 and PHP ≥ 8.1. Not on Packagist.
 
 ```bash
-composer config repositories.pimcore-security-patches vcs https://github.com/portadesign/pimcore-11-security-patches
+composer config repositories.pimcore-security-patches vcs https://github.com/portadesign/pimcore-security-patches
 composer config allow-plugins.cweagans/composer-patches true
 composer config allow-plugins.portadesign/pimcore-security-patches true
 composer require portadesign/pimcore-security-patches:^10.6
@@ -58,7 +58,7 @@ One branch and one tag series per Pimcore line; the version is the line: `^10.6`
 | CVE-2026-45162 | pimcore | Remaining unserialize() paths take allowlists; element session data in tmp_store is HMAC-signed; the WebDAV delete-log allowlist is part of the CVE-2026-45260 patch |
 | CVE-2026-23493 | pimcore | HTTP error log stores no cookies or server variables; run `UPDATE http_error_log SET cookies = 'a:0:{}', serverVars = 'a:0:{}';` once for old rows |
 | CVE-2026-11407 | pimcore | Twig sandbox policy: blocked classes (user, token, session, request bags, CSRF and CSP handler, DAO, listings, DBAL, PDO, container, kernel, process, Twig, class/brick/field-collection/custom-layout definitions), blocked `pimcore_*` functions that read files, dump or instantiate classes, render templates, run editables or change render state (incl. `pimcore_minimize_scripts`, navigation, editables), no static, magic or `__call`-forwarded methods on models, hard-blocked mutators (`save*`, `delete*`, `set*`, ...), secret getters, request input readers (body, query, URI, credentials, client IP, session, accept headers), workflow transitions, translator, message catalogue, device detector and app state changes; the admin `csrfToken` Twig global is nulled in every sandboxed render. Needs Twig >= 3.27.0. `objectTypes` arguments restricted to object/variant/folder; array thumbnail configs rejected in a sandbox. Config: `pimcore.templating_engine.twig.sandbox_security_policy.{blocked_classes,allowed_classes,blocked_functions,hard_blocked_methods}` |
-| PD-2026-002 (no CVE, hardening) | pimcore | Resent logged mails, the application log summary mail and the account mails (lost password, invitation) are sent without template rendering; the mail log stores the subject that was sent. The log summary mail and workflow notification mails keep a plain-text part |
+| PD-2026-002 (no CVE, hardening) | pimcore | Resent logged mails, the application log summary mail and workflow notification template mails are sent without template rendering; the mail log stores the subject that was sent. The log summary mail and workflow notification mails keep a plain-text part |
 | PD-2026-005 (no CVE, hardening) | pimcore | Default mail sender `no-reply@<host>`, links/files in mail bodies and the workflow notification deeplink use `general.domain` before the request host |
 | CVE-2026-45260 | pimcore | WebDAV MOVE needs `create` on the destination, `publish` on the asset, `delete` when overwriting/restoring, `rename` for a rename; checked before the destination is deleted (existing folder destination needs `rename`, a taken cross-folder target is refused with 409); a failed save returns 500; `Tree::move()` reuses the decision of the `beforeMove` check, so a lost delete-log entry cannot turn an authorised overwrite into a 403 after the destination is gone; a cross-folder move onto an existing destination with another name is refused with 409; the delete-log allowlist of CVE-2026-45162 (`Tree::move()`, including `class_overrides` targets) is in the same patch |
 | CVE-2026-45703 | pimcore | Word/XLIFF export return 403 for elements the user may not `view`; the export job list omits them |
@@ -74,6 +74,12 @@ One branch and one tag series per Pimcore line; the version is the line: `^10.6`
 | CVE-2025-30166 | pimcore | HTML of the admin test mail is sanitized |
 | CVE-2023-46722, CVE-2023-5873 | pimcore | PDF preview served inline with nosniff and script-src 'none' (needs the image editor CSP patch for `_pimcore_own_csp`) |
 | CVE-2023-42817 | pimcore | Admin sprintf() substitutes in one pass (run assets:install) |
+| CVE-2026-115898 | pimcore | Lost-password and invitation mails are sent without template rendering; the workflow notification deeplink percent-encodes characters outside `A-Za-z0-9/._~%-` of the router base URL (`X-Forwarded-Prefix`) |
+| CVE-2026-115891 | pimcore | Notification grid filter accepts only the `title` and `date` properties |
+| CVE-2026-115890 | pimcore | Field collection field name in the data object listing JOIN is quoted as a string literal |
+| CVE-2026-5362 | pimcore | Embed editable outputs a single http(s) URL only and escapes URLs no provider recognises (advisory lists 12.3.3; 10.6.9 is exploitable as well) |
+| CVE-2026-115894 | pimcore | Model getters in sandboxed Twig (`user.getPassword()`, `pimcore_user(1).getPassword()`, `asset.getData()`) are blocked by the CVE-2026-11407 sandbox patch |
+| PD-2026-008 (no CVE, hardening) | pimcore | Mail documents: template syntax outside the document's own editables is encoded as `&#123;` before the second render, so mail parameters (newsletter subscriber data, workflow deeplink) are not evaluated as Twig; the plain-text part is converted from the rendered HTML without another pass. Placeholders inside embedded snippets or renderlets are no longer evaluated |
 | GHSA-hq76-662x-7mw4 | pimcore | `conflict` `phpoffice/phpspreadsheet <1.30.7`: advisory fix is 1.29.1 (CVE-2024-45048), the floor is the first 1.x release without a published 1.x advisory and so also covers the 28 advisories fixed after 1.29.1 and the two fixed in 1.29.1 itself (CVE-2024-45293, CVE-2024-45046); run `composer update phpoffice/phpspreadsheet` once |
 | GHSA-jmh9-6rjq-gjh9 | pimcore | image editor: `jQuery.htmlPrefilter` becomes an identity function (bundle patch), and the editor response carries a Content-Security-Policy (no `unsafe-inline`/`unsafe-eval` for scripts, nonce for the inline config script, hashes for the fixed dialog handlers) so handlers created by HTML parsing are inert (CVE-2020-11022, CVE-2020-11023); run `bin/console assets:install` and `bin/console cache:clear` |
 
@@ -89,9 +95,10 @@ The vulnerable code is absent; the VEX lists these as `not_affected`.
 - CVE-2024-23646: both asset zip actions quote every `selectedId`.
 - CVE-2023-49075: `PimcoreUserTwoFactorCondition` does not exist; two-factor runs through `TwoFactorListener` and `scheb/2fa-bundle`.
 - CVE-2023-37280: the `/admin/login/2fa-setup` route does not exist.
+- CVE-2026-58401: `Authentication::safelyUnserialize()` does not exist; `lib/Tool/Authentication.php` reads the session's `user` attribute, accepts only `Pimcore\Model\User` and deserialises no token.
 - CVE-2023-47636: the advisory's `fopen()` of `var/tmp/export-<id>.csv` has no counterpart (grid exports use the storage API); the related hardening of error messages carrying paths is PD-2026-004.
 
-CVE-2023-1247 is withdrawn by GitHub and not listed. PD-2026-001 (admin session token hardening of the 11.5 line) does not apply: `lib/Tool/Authentication.php` reads a session attribute and deserialises no token.
+CVE-2023-1247 is withdrawn by GitHub and not listed.
 
 ## Scanners
 
